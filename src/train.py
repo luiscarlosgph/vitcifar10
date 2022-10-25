@@ -5,12 +5,12 @@
 """
 
 import argparse
+import numpy as np
 import torch
 import torchvision
 import timm
-import numpy as np
+import vitcifar10.randomaug
 
-# My imports
 
 # Fix random seeds for reproducibility
 seed = 0
@@ -77,7 +77,7 @@ def load_dataset(train_preproc_tf, test_preproc_tf, train_bs: int = 512,
     return train_dl, test_dl
 
 
-def build_preprocessing_transforms(size: int = 384):
+def build_preprocessing_transforms(size: int = 384, randaug_n: int = 2, randaug_m: int = 14):
     """
     @brief Preprocessing and data augmentation.
 
@@ -86,6 +86,7 @@ def build_preprocessing_transforms(size: int = 384):
 
     @returns a tuple of two transforms, one for training and another one for testing.
     """
+    # Preprocessing for training
     train_preproc_tf = torchvision.transforms.Compose([
         torchvision.transforms.RandomCrop(32, padding=4),
         torchvision.transforms.Resize(size),
@@ -94,6 +95,10 @@ def build_preprocessing_transforms(size: int = 384):
         torchvision.transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
     ])
 
+    # Data augmentation
+    train_preproc_tf.transforms.insert(0, vitcifar10.randomaug.RandAugment(randaug_n, randaug_m))
+    
+    # Preprocessing for testing
     test_preproc_tf = torchvision.transforms.Compose([
         torchvision.transforms.Resize(size),
         torchvision.transforms.ToTensor(),

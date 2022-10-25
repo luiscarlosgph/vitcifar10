@@ -13,7 +13,7 @@ this_directory = path.abspath(path.dirname(__file__))
 with open(path.join(this_directory, 'README.md'), encoding='utf-8') as f:
     long_description = f.read()
 
-setuptools.setup(name='vit-cifar10',
+setuptools.setup(name='vitcifar10',
     version='0.0.1',
     description='Python module to train and test on CIFAR-10.',
     author='Luis C. Garcia-Peraza Herrera',
@@ -21,10 +21,10 @@ setuptools.setup(name='vit-cifar10',
     license='MIT License',
     url='https://github.com/luiscarlosgph/dentalseg',
     packages=[
-        'vit-cifar10',
+        'vitcifar10',
     ],
     package_dir={
-        'vit-cifar10': 'src',
+        'vitcifar10': 'src',
     },
     install_requires = [
         'numpy', 
