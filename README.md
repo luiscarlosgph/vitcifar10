@@ -1,2 +1,4 @@
-# vit-cifar10
-ViT repository train and test on CIFAR-10.
+Description
+-----------
+
+Visual Transformer baseline code for training and testing on CIFAR-10.
