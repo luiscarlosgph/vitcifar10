@@ -25,8 +25,9 @@ def help(short_option):
     @returns The string with the help information for each command line option.
     """
     help_msg = {
-        '--lr' : 'Learning rate (required: True)',  # ResNets: 1e-3, ViT: 1e-4
-        '--opt': 'Optimizer (required: True)', 
+        '--lr' :     'Learning rate (required: True)',
+        '--opt':     'Optimizer (required: True)', 
+        '--nepochs': 'Number of epochs (required: True)',
     }
     return help_msg[short_option]
 
@@ -34,26 +35,18 @@ def help(short_option):
 def parse_cmdline_params():
     """@returns The argparse args object."""
     args = argparse.ArgumentParser(description='PyTorch ViT for training/testing on CIFAR-10.')
-    args.add_argument('--lr', required=True, type=float, help=help('--lr'))  
-    args.add_argument('--opt', required=True, type=str, help=help('--opt'))
-    #args.add_argument('--resume', '-r', action='store_true', help='resume from checkpoint')
-    #args.add_argument('--noaug', action='store_true', help='disable use randomaug')
-    #args.add_argument('--noamp', action='store_true', help='disable mixed precision training. for older pytorch versions')
-    #args.add_argument('--nowandb', action='store_true', help='disable wandb')
-    #args.add_argument('--mixup', action='store_true', help='add mixup augumentations')
-    #args.add_argument('--net', default='vit')
-    #args.add_argument('--bs', default='512')
-    #args.add_argument('--size', default="32")
-    #args.add_argument('--n_epochs', type=int, default='200')
-    #args.add_argument('--patch', default='4', type=int, help="patch for ViT")
-    #args.add_argument('--dimhead', default="512", type=int)
-    #args.add_argument('--convkernel', default='8', type=int, help="parameter for convmixer")  
+    args.add_argument('--lr', required=True, type=float, 
+                      help=help('--lr'))  
+    args.add_argument('--opt', required=True, type=str, 
+                      help=help('--opt'))
+    args.add_argument('--nepochs', required=True, type=int, 
+                      help=help('--nepochs'))
 
     return  args.parse_args()
 
 
 def load_dataset(train_preproc_tf, test_preproc_tf, train_bs: int = 512, 
-        test_bs: int = 100, num_workers: int = 8):
+                 test_bs: int = 100, num_workers: int = 8):
     """
     @brief Function that creates the dataloaders of CIFAR-10.
 
@@ -64,20 +57,25 @@ def load_dataset(train_preproc_tf, test_preproc_tf, train_bs: int = 512,
     """
     # Load training and testing sets
     train_ds = torchvision.datasets.CIFAR10(root='./data', train=True, 
-                                            download=True, transform=train_preproc_tf)
+                                            download=True, 
+                                            transform=train_preproc_tf)
     test_ds = torchvision.datasets.CIFAR10(root='./data', train=False, 
-                                           download=True, transform=test_preproc_tf)
+                                           download=True, 
+                                           transform=test_preproc_tf)
 
     # Create dataloaders
     train_dl = torch.utils.data.DataLoader(train_ds, batch_size=train_bs, 
-                                           shuffle=True, num_workers=num_workers)
+                                           shuffle=True, 
+                                           num_workers=num_workers)
     test_dl = torch.utils.data.DataLoader(test_ds, batch_size=test_bs, 
-                                          shuffle=False, num_workers=num_workers)
+                                          shuffle=False, 
+                                          num_workers=num_workers)
 
     return train_dl, test_dl
 
 
-def build_preprocessing_transforms(size: int = 384, randaug_n: int = 2, randaug_m: int = 14):
+def build_preprocessing_transforms(size: int = 384, randaug_n: int = 2, 
+                                   randaug_m: int = 14):
     """
     @brief Preprocessing and data augmentation.
 
@@ -132,6 +130,48 @@ def build_optimizer(net, lr, opt: str = "adam"):
     return optimizer
 
 
+def train(net: torch.nn, train_dl, loss, optimizer):
+    """
+    @brief Train the model for a single epoch.
+    
+    @param[in, out]  net       PyTorch model.
+    @param[in, out]  train_dl  PyTorch dataloader for the trainig data.
+    @param[in]       loss      Pointer to the loss function.
+    @param[in, out]  optimizer PyTorch optimizer to be used for training.
+    """
+    scaler = torch.cuda.amp.GradScaler(enabled=True)
+    net.train()
+    train_loss = 0
+    correct = 0
+    total = 0
+    for batch_idx, (inputs, targets) in enumerate(train_dl):
+        inputs, targets = inputs.to(device), targets.to(device)
+        # Train with amp
+        with torch.cuda.amp.autocast(enabled=True):
+            outputs = net(inputs)
+            loss = loss(outputs, targets)
+        scaler.scale(loss).backward()
+        scaler.step(optimizer)
+        scaler.update()
+        optimizer.zero_grad()
+
+        train_loss += loss.item()
+        _, predicted = outputs.max(1)
+        total += targets.size(0)
+        correct += predicted.eq(targets).sum().item()
+
+        # TODO: call function to show progress bar for the epoch here
+
+        #progress_bar(batch_idx, len(trainloader), 'Loss: %.3f | Acc: %.3f%% (%d/%d)'
+        #    % (train_loss/(batch_idx+1), 100.*correct/total, correct, total))
+    return train_loss / (batch_idx + 1)
+
+
+def test(epoch: int):
+    # TODO
+    pass
+
+
 def main():
     # Parse command line parameters
     args = parse_cmdline_params()
@@ -150,6 +190,12 @@ def main():
     
     # Build optimizer
     optimizer = build_optimizer(net, args.lr, args.opt)
+
+    # Build LR scheduler
+    scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, args.nepochs)
+
+
+    train(net, train_dl, loss, optimizer)
 
     
 if __name__ == '__main__':
