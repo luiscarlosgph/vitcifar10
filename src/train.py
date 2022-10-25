@@ -123,6 +123,15 @@ def build_model(nclasses: int = 10):
     return net
 
 
+def build_optimizer(net, lr, opt: str = "adam"):
+    if opt.lower() == "adam":
+        optimizer = torch.optim.Adam(net.parameters(), lr=lr)
+    elif opt.lower() == "sgd":
+        optimizer = torch.optim.SGD(net.parameters(), lr=lr)
+    
+    return optimizer
+
+
 def main():
     # Parse command line parameters
     args = parse_cmdline_params()
@@ -136,6 +145,12 @@ def main():
     # Build model
     net = build_model()
 
+    # Use cross-entropy loss
+    loss = torch.nn.CrossEntropyLoss()
+    
+    # Build optimizer
+    optimizer = build_optimizer(net, args.lr, args.opt)
 
+    
 if __name__ == '__main__':
     main()
