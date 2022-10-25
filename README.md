@@ -15,5 +15,5 @@ Train
 -----
 
 ```bash
-$ python3 -m vitcifar10.train --lr 1e-4 --opt adam --nepochs 200 --bs 16
+$ python3 -m vitcifar10.train --lr 1e-4 --opt adam --nepochs 200 --bs 16 --cpdir checkpoints --logdir logs
 ```
