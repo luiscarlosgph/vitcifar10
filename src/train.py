@@ -9,8 +9,10 @@ import numpy as np
 import torch
 import torchvision
 import timm
-import vitcifar10.randomaug
+import tqdm
 
+# My imports
+import vitcifar10.randomaug
 
 # Fix random seeds for reproducibility
 seed = 0
@@ -28,6 +30,7 @@ def help(short_option):
         '--lr' :     'Learning rate (required: True)',
         '--opt':     'Optimizer (required: True)', 
         '--nepochs': 'Number of epochs (required: True)',
+        '--bs':      'Training batch size (required: True)',
     }
     return help_msg[short_option]
 
@@ -41,6 +44,8 @@ def parse_cmdline_params():
                       help=help('--opt'))
     args.add_argument('--nepochs', required=True, type=int, 
                       help=help('--nepochs'))
+    args.add_argument('--bs', required=True, type=int,
+                      help=help('--bs'))
 
     return  args.parse_args()
 
@@ -117,6 +122,7 @@ def build_model(nclasses: int = 10):
     """
     net = timm.create_model('vit_base_patch16_384', pretrained=True)
     net.head = torch.nn.Linear(net.head.in_features, nclasses)
+    net.cuda()
 
     return net
 
@@ -130,26 +136,34 @@ def build_optimizer(net, lr, opt: str = "adam"):
     return optimizer
 
 
-def train(net: torch.nn, train_dl, loss, optimizer):
+def train(net: torch.nn, train_dl, loss_func, optimizer, device='cuda'):
     """
     @brief Train the model for a single epoch.
     
     @param[in, out]  net       PyTorch model.
     @param[in, out]  train_dl  PyTorch dataloader for the trainig data.
-    @param[in]       loss      Pointer to the loss function.
+    @param[in]       loss_func Pointer to the loss function.
     @param[in, out]  optimizer PyTorch optimizer to be used for training.
     """
+    # Setup gradient scaler
     scaler = torch.cuda.amp.GradScaler(enabled=True)
+
+    # Set network in train mode
     net.train()
+
+    # Create progress bar
+    pbar = tqdm.tqdm(enumerate(train_dl), total=len(train_dl))
+
+    # Run forward-backward over all the samples
     train_loss = 0
     correct = 0
     total = 0
-    for batch_idx, (inputs, targets) in enumerate(train_dl):
+    for batch_idx, (inputs, targets) in pbar:
         inputs, targets = inputs.to(device), targets.to(device)
         # Train with amp
         with torch.cuda.amp.autocast(enabled=True):
             outputs = net(inputs)
-            loss = loss(outputs, targets)
+            loss = loss_func(outputs, targets)
         scaler.scale(loss).backward()
         scaler.step(optimizer)
         scaler.update()
@@ -160,10 +174,12 @@ def train(net: torch.nn, train_dl, loss, optimizer):
         total += targets.size(0)
         correct += predicted.eq(targets).sum().item()
 
-        # TODO: call function to show progress bar for the epoch here
+        # Plot loss and accuracy until the current batch
+        display_loss = train_loss / (batch_idx + 1)
+        display_acc = 100. * correct / total
+        pbar.set_description("Loss: %.3f  Acc: %.3f%% (%d/%d)" % (display_loss, 
+            display_acc, correct, total))
 
-        #progress_bar(batch_idx, len(trainloader), 'Loss: %.3f | Acc: %.3f%% (%d/%d)'
-        #    % (train_loss/(batch_idx+1), 100.*correct/total, correct, total))
     return train_loss / (batch_idx + 1)
 
 
@@ -180,13 +196,13 @@ def main():
     train_preproc_tf, test_preproc_tf = build_preprocessing_transforms()
 
     # Get dataloaders for training and testing
-    train_dl, test_dl = load_dataset(train_preproc_tf, test_preproc_tf)
+    train_dl, test_dl = load_dataset(train_preproc_tf, test_preproc_tf, train_bs=args.bs)
 
     # Build model
     net = build_model()
 
     # Use cross-entropy loss
-    loss = torch.nn.CrossEntropyLoss()
+    loss_func = torch.nn.CrossEntropyLoss()
     
     # Build optimizer
     optimizer = build_optimizer(net, args.lr, args.opt)
@@ -195,7 +211,7 @@ def main():
     scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, args.nepochs)
 
 
-    train(net, train_dl, loss, optimizer)
+    train(net, train_dl, loss_func, optimizer)
 
     
 if __name__ == '__main__':
