@@ -7,9 +7,12 @@
 import argparse
 import numpy as np
 import torch
+import torch.utils.data.sampler
+import torch.utils.tensorboard
 import torchvision
 import timm
 import tqdm
+import os
 
 # My imports
 import vitcifar10.randomaug
@@ -31,13 +34,16 @@ def help(short_option):
         '--opt':     'Optimizer (required: True)', 
         '--nepochs': 'Number of epochs (required: True)',
         '--bs':      'Training batch size (required: True)',
+        '--cpdir':   'Path to the checkpoint directory (required: True)', 
+        '--logdir':  'Path to the log directory (required: True)',
+        '--resume':  'Path to the checkpoint file (required: False)',
     }
     return help_msg[short_option]
 
 
 def parse_cmdline_params():
     """@returns The argparse args object."""
-    args = argparse.ArgumentParser(description='PyTorch ViT for training/testing on CIFAR-10.')
+    args = argparse.ArgumentParser(description='PyTorch ViT for training/validation on CIFAR-10.')
     args.add_argument('--lr', required=True, type=float, 
                       help=help('--lr'))  
     args.add_argument('--opt', required=True, type=str, 
@@ -46,37 +52,58 @@ def parse_cmdline_params():
                       help=help('--nepochs'))
     args.add_argument('--bs', required=True, type=int,
                       help=help('--bs'))
-
+    args.add_argument('--cpdir', required=True, type=str,
+                      help=help('--cpdir'))
+    args.add_argument('--logdir', required=True, type=str,
+                      help=help('--logdir'))
+    args.add_argument('--resume', required=False, type=str, default=None,
+                      help=help('--resume'))
+    
     return  args.parse_args()
 
 
-def load_dataset(train_preproc_tf, test_preproc_tf, train_bs: int = 512, 
-                 test_bs: int = 100, num_workers: int = 8):
+def load_dataset(train_preproc_tf, valid_preproc_tf, data_dir='./data', train_bs: int = 512, 
+                 valid_bs: int = 100, num_workers: int = 8, valid_size: float = 0.1):
     """
     @brief Function that creates the dataloaders of CIFAR-10.
 
     @param[in]  train_bs  Training batch size.
-    @param[in]  test_bs   Testing batch size.
+    @param[in]  valid_bs   Testing batch size.
 
-    @returns a tuple with the training and testing dataloaders.
+    @returns a tuple with the training and validation dataloaders.
     """
-    # Load training and testing sets
-    train_ds = torchvision.datasets.CIFAR10(root='./data', train=True, 
+    # Load training and validation sets
+    train_ds = torchvision.datasets.CIFAR10(root=data_dir, train=True, 
                                             download=True, 
                                             transform=train_preproc_tf)
-    test_ds = torchvision.datasets.CIFAR10(root='./data', train=False, 
+    valid_ds = torchvision.datasets.CIFAR10(root=data_dir, train=True,
                                            download=True, 
-                                           transform=test_preproc_tf)
+                                           transform=valid_preproc_tf)
+    
+    # Create train/val split of the CIFAR-10 training set
+    num_train = len(train_dataset)
+    indices = list(range(num_train))
+    split = int(np.floor(valid_size * num_train))
+
+    # NOTE: Random shuffle of the train/val images
+    np.random.shuffle(indices)
+
+    # Create samplers 
+    train_idx, valid_idx = indices[split:], indices[:split]
+    train_sampler = torch.utils.data.sampler.SubsetRandomSampler(train_idx)
+    valid_sampler = torch.utils.data.sampler.SubsetRandomSampler(valid_idx)
 
     # Create dataloaders
     train_dl = torch.utils.data.DataLoader(train_ds, batch_size=train_bs, 
+                                           sampler=train_sampler,
                                            shuffle=True, 
                                            num_workers=num_workers)
-    test_dl = torch.utils.data.DataLoader(test_ds, batch_size=test_bs, 
+    valid_dl = torch.utils.data.DataLoader(valid_ds, batch_size=valid_bs, 
+                                          sampler=valid_sampler,
                                           shuffle=False, 
                                           num_workers=num_workers)
 
-    return train_dl, test_dl
+    return train_dl, valid_dl
 
 
 def build_preprocessing_transforms(size: int = 384, randaug_n: int = 2, 
@@ -102,13 +129,13 @@ def build_preprocessing_transforms(size: int = 384, randaug_n: int = 2,
     train_preproc_tf.transforms.insert(0, vitcifar10.randomaug.RandAugment(randaug_n, randaug_m))
     
     # Preprocessing for testing
-    test_preproc_tf = torchvision.transforms.Compose([
+    valid_preproc_tf = torchvision.transforms.Compose([
         torchvision.transforms.Resize(size),
         torchvision.transforms.ToTensor(),
         torchvision.transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
     ])
 
-    return train_preproc_tf, test_preproc_tf
+    return train_preproc_tf, valid_preproc_tf
 
 
 def build_model(nclasses: int = 10):
@@ -136,17 +163,51 @@ def build_optimizer(net, lr, opt: str = "adam"):
     return optimizer
 
 
-def train(net: torch.nn, train_dl, loss_func, optimizer, device='cuda'):
+def resume(checkpoint_path, net, optimizer, scheduler, scaler):
+    """
+    @param[in]       checkpoint_path  Path to the checkpoint file (extension .pt).
+    @param[in, out]  net              Initialized PyTorch model.
+    @param[in, out]  optimizer        Initialized solver.
+    @param[in, out]  scheduler        Initialized LR scheduler.
+    @param[in, out]  scaler           Initialized gradient scaler.
+    """
+    print('[INFO] Resuming from checkpoint ...')
+     
+    # Check that the checkpoint directory exists
+    if not os.path.isfile(args.resume):
+        raise FileNotFoundError('[ERROR] You want to resume from the last checkpoint, ' \
+            + 'but there is not directory called "checkpoint"')
+    
+    # Load state
+    state = torch.load(checkpoint_path)
+    
+    # Update model with saved weights
+    net.load_state_dict(state['net'])
+
+    # Update optimizer with saved params
+    optimizer.load_state_dict(state['optimizer'])
+
+    # Update scheduler with saved params
+    scheduler.load_state_dict(state['scheduler'])
+
+    # Update scaler with saved params
+    scaler.load_state_dict(state['scaler'])
+    
+    print('[INFO] Resuming from checkpoint ...')
+
+    return state['lowest_valid_loss'], state['epoch'] + 1
+
+
+def train(net: torch.nn, train_dl, loss_func, optimizer, scaler, device='cuda'):
     """
     @brief Train the model for a single epoch.
     
-    @param[in, out]  net       PyTorch model.
-    @param[in, out]  train_dl  PyTorch dataloader for the trainig data.
+    @param[in, out]  net       Model.
+    @param[in]       train_dl  Dataloader for the trainig data.
     @param[in]       loss_func Pointer to the loss function.
-    @param[in, out]  optimizer PyTorch optimizer to be used for training.
+    @param[in, out]  optimizer Optimizer to be used for training.
+    @param[in]       scaler    Gradient scaler.
     """
-    # Setup gradient scaler
-    scaler = torch.cuda.amp.GradScaler(enabled=True)
 
     # Set network in train mode
     net.train()
@@ -174,18 +235,59 @@ def train(net: torch.nn, train_dl, loss_func, optimizer, device='cuda'):
         total += targets.size(0)
         correct += predicted.eq(targets).sum().item()
 
-        # Plot loss and accuracy until the current batch
+        # Display loss and accuracy on the progress bar
         display_loss = train_loss / (batch_idx + 1)
         display_acc = 100. * correct / total
-        pbar.set_description("Loss: %.3f  Acc: %.3f%% (%d/%d)" % (display_loss, 
+        pbar.set_description("Loss: %.3f | Acc: %.3f%% (%d/%d)" % (display_loss, 
             display_acc, correct, total))
 
-    return train_loss / (batch_idx + 1)
+    return display_loss, display_acc
 
 
-def test(epoch: int):
-    # TODO
-    pass
+def valid(net: torch.nn, valid_dl, loss_func):
+    """
+    @param[in, out]  net        PyTorch model.
+    @param[in]       valid_dl    PyTorch dataloader for the testing data.
+    @param[in]       loss_func  Pointer to the loss function.
+    """
+    valid_loss = 0
+    correct = 0
+    total = 0
+
+    net.eval()
+    with torch.no_grad():
+        # Create progress bar
+        pbar = tqdm.tqdm(enumerate(valid_dl), total=len(valid_dl))
+        
+        # Loop over testing data points
+        for batch_idx, (inputs, targets) in pbar:
+            # Perform inference
+            inputs, targets = inputs.to(device), targets.to(device)
+            outputs = net(inputs)
+
+            # Compute losses and metrics
+            loss = loss_func(outputs, targets)
+            valid_loss += loss.item()
+            _, predicted = outputs.max(1)
+            total += targets.size(0)
+            correct += predicted.eq(targets).sum().item()
+
+            # Display loss and top-1 accuracy on the progress bar 
+            display_loss = valid_loss / (batch_idx + 1)
+            display_acc = 100. * correct / total
+            pbar.set_description("Loss: %.3f | Acc: %.3f%% (%d/%d)" % (display_loss,
+                display_acc, correct, total))
+    
+    return display_loss, display_acc
+
+
+def setup_tensorboard(log_dir) -> torch.utils.tensorboard.SummaryWriter:
+    """
+    @param[in]  log_dir  Path to the Tensorboard log directory.
+    @returns the Tensorboard writer.
+    """
+    writer = torch.utils.tensorboard.SummaryWriter(log_dir=log_dir)
+    return writer
 
 
 def main():
@@ -193,10 +295,10 @@ def main():
     args = parse_cmdline_params()
 
     # Prepare preprocessing layers
-    train_preproc_tf, test_preproc_tf = build_preprocessing_transforms()
+    train_preproc_tf, valid_preproc_tf = build_preprocessing_transforms()
 
     # Get dataloaders for training and testing
-    train_dl, test_dl = load_dataset(train_preproc_tf, test_preproc_tf, train_bs=args.bs)
+    train_dl, valid_dl = load_dataset(train_preproc_tf, valid_preproc_tf, train_bs=args.bs)
 
     # Build model
     net = build_model()
@@ -210,9 +312,83 @@ def main():
     # Build LR scheduler
     scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, args.nepochs)
 
+    # Setup gradient scaler
+    scaler = torch.cuda.amp.GradScaler(enabled=True)
 
-    train(net, train_dl, loss_func, optimizer)
+    # Setup Tensorboard
+    writer = setup_tensorboard()
 
+    # Resume from the last checkpoint if requested
+    lowest_valid_loss = np.inf
+    start_epoch = 0
+    if args.resume is not None:
+        lowest_valid_loss, start_epoch = resume(args.resume, net, optimizer, scheduler, scaler)
+
+    # Create lists to store the losses and metrics
+    train_loss_over_epochs = []
+    train_acc_over_epochs = []
+    valid_loss_over_epochs = []
+    valid_acc_over_epochs = []
     
+    # Training loop  
+    for epoch in range(start_epoch, args.nepochs):  
+        print("\n[INFO] Epoch: {}".format(epoch))
+        start = time.time()
+
+        # Run a training epoch
+        train_loss, train_acc = train(net, train_dl, loss_func, optimizer, scaler)
+
+        # Run testing
+        valid_loss, valid_acc = valid(net, valid_dl, loss_func)
+
+        # Update lowest validation loss
+        if valid_loss < lowest_valid_loss:
+            lowest_valid_loss = valid_loss
+
+        # Save checkpoint
+        print('[INFO] Saving model for this epoch ...')
+        state = {
+            "net":               net.state_dict(),
+            "optimizer":         optimizer.state_dict(),
+            "scheduler":         scheduler.state_dict(),
+            "scaler":            scaler.state_dict(),
+            "lowest_valid_loss": lowest_valid_loss,
+            "epoch":             epoch,
+        }
+        if not os.path.isdir(args.cpdir):
+            os.mkdir(args.cpdir)
+        checkpoint_path = os.path.join(args.cpdir, "epoch_{}.pt".format(epoch))
+        torch.save(state, checkpoint_path) 
+        print('[INFO] Saved.')
+
+        # If it is the best model, let's copy it
+        if valid_loss < lowest_valid_loss:
+            print('[INFO] Saving best model ...')
+            model_best_path = os.path.join(args.cpdir, 'model_best_{}.pt'.format(epoch))
+            torch.save(state, model_best_path) 
+            print('[INFO] Saved.')
+        
+        # Add step to the LR cosine scheduler
+        scheduler.step(epoch - 1)
+        
+        # Store training losses and metrics
+        train_loss_over_epochs.append(train_loss)
+        train_acc_over_epochs.append(train_acc)
+        
+        # Store validation losses and metrics
+        valid_loss_over_epochs.append(valid_loss)
+        valid_acc_over_epochs.append(valid_acc)
+
+        # Log training losses and metrics in Tensorboard
+        writer.add_scalar('Loss/train', train_loss, epoch)
+        writer.add_scalar('Accuracy/train', train_acc, epoch)
+        
+        # Log validation losses and metrics in Tensorboard
+        writer.add_scalar('Loss/valid', valid_loss, epoch)
+        writer.add_scalar('Accuracy/valid', valid_acc, epoch)
+       
+        print("[INFO] Epoch: {} finished.".format(epoch))
+    
+
 if __name__ == '__main__':
     main()
