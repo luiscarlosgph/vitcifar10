@@ -1,7 +1,7 @@
 Description
 -----------
 
-This repository contains the Python package `vitcifar10`, which is a Vision Transformer baseline code for training and testing on CIFAR-10.
+This repository contains the Python package `vitcifar10`, which is a Vision Transformer (ViT) baseline code for training and testing on CIFAR-10.
 
 
 Install
