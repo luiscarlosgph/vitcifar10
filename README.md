@@ -13,7 +13,7 @@ Use within a Docker container
 
 If you do not have Docker, [here](https://github.com/luiscarlosgph/how-to/tree/main/docker) you can find a tutorial to install it.
 
-1. Build Docker image:
+1. Build `vitcifar10` Docker image:
    ```bash
    $ git clone https://github.com/luiscarlosgph/vitcifar10.git
    $ cd vitcifar10/docker
