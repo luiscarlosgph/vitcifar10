@@ -29,7 +29,7 @@ $ python3 -m vitcifar10.train --lr 1e-4 --opt adam --nepochs 200 --bs 16 --cpdir
 * Launch Tensorboard:
 
 ```bash
-$ python3 -m  tensorboard.main --logdir logs
+$ python3 -m  tensorboard.main --logdir logs --bind_all
 ```
 
 
