@@ -22,7 +22,7 @@ If you do not have Docker, [here](https://github.com/luiscarlosgph/how-to/tree/m
 
 2. Launch `vitcifar10` container:
    ```bash
-   $ docker run --name wild_vitcifar10 --runtime=nvidia -v /dev/shm:/dev/shm vitcifar10:latest 
+   $ docker run --name wild_vitcifar10 --runtime=nvidia -v /dev/shm:/dev/shm vitcifar10:latest &
    ```
    
 3. Get a terminal inside the container:
