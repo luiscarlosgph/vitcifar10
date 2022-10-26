@@ -68,9 +68,9 @@ Train on CIFAR-10
 
 * Launch Tensorboard:
 
-```bash
-$ python3 -m  tensorboard.main --logdir logs --bind_all
-```
+   ```bash
+   $ python3 -m  tensorboard.main --logdir logs --bind_all
+   ```
 
 
 Test on CIFAR-10
