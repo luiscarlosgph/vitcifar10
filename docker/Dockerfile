@@ -1,6 +1,6 @@
-# @brief  Image with support for: CUDA, pyenv, and PyTorch.
+# @brief  Image with support for: CUDA, pyenv, PyTorch, and the 'vitcifar10' Python package.
 # @author Luis C. Garcia Peraza Herrera (luiscarlos.gph@gmail.com).
-# @date   25 October 2022.
+# @date   26 October 2022.
 
 # Image info
 FROM nvidia/cuda:11.6.2-cudnn8-runtime-ubuntu20.04
