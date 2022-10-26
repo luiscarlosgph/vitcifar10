@@ -41,6 +41,9 @@ If you do not have Docker, [here](https://github.com/luiscarlosgph/how-to/tree/m
    $ python3 -m vitcifar10.test --data ./data --resume checkpoints/model_best.pt
    ```
 
+If you want to kill the container run `$ docker kill wild_vitcifar10` and to remove it `$docker rm wild_vitcifar10`.
+
+
 Install with pip
 ----------------
 
