@@ -10,6 +10,7 @@ import torch
 import torch.utils.tensorboard
 import torchvision
 import timm
+import tqdm
 
 # My imports
 import vitcifar10
