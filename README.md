@@ -28,7 +28,7 @@ If you do not have Docker, [here](https://github.com/luiscarlosgph/how-to/tree/m
 3. Get a terminal inside the container:
    ```bash
    $ docker exec -it wild_vitcifar10 /bin/zsh
-   $ cd
+   $ cd $HOME
    ```
    
 4. Launch CIFAR-10 training:
