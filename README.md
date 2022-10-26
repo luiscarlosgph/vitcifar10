@@ -1,7 +1,9 @@
 Description
 -----------
 
-This repository contains the Python package `vitcifar10`, which is a Vision Transformer (ViT) baseline code for training and testing on CIFAR-10. This implementation only supports CUDA (no CPU training).
+This repository contains the Python package `vitcifar10`, which is a Vision Transformer (ViT) baseline code for training and testing on CIFAR-10. This implementation only supports CUDA (no CPU training). 
+
+The idea of this repository is not to have a very flexible implementation, but one that can be used as a baseline for research with results on testing close to the state of the art.
 
 
 Install
