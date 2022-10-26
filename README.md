@@ -86,12 +86,12 @@ $ python3 -m vitcifar10.test --data ./data --resume checkpoints/model_best.pt
    * `--data`: path to the directory where the dataset will be stored.
    * `--resume`: path to the checkpoint file you want to test.
 
-
+<!--
 Perform inference on a single image
 -----------------------------------
 
 TODO
-
+-->
 
 
 
