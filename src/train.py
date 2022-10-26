@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
 @brief  Main script to kick off the training.
 @author Luis Carlos Garcia Peraza Herrera (luiscarlos.gph@gmail.com).
