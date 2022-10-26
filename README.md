@@ -14,8 +14,8 @@ $ python3 setup.py install
 ```
 
 
-Train
------
+Train on CIFAR-10
+-----------------
 
 * Launch training:
 
@@ -46,16 +46,33 @@ $ python3 -m  tensorboard.main --logdir logs --bind_all
 ```
 
 
-Test
-----
+Test on CIFAR-10
+----------------
 
 ```bash
 $ TODO
 ```
 
+Perform inference on a single image
+-----------------------------------
+
+TODO
+
 Docker container
 ----------------
 
 TODO
+
+
+Author
+------
+
+Luis C. Garcia Peraza Herrera (luiscarlos.gph@gmail.com).
+
+
+License
+-------
+
+This repository is shared under an [MIT license](LICENSE).
 
 
