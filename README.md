@@ -25,7 +25,7 @@ If you do not have Docker, [here](https://github.com/luiscarlosgph/how-to/tree/m
    $ docker run --name wild_vitcifar10 --runtime=nvidia -v /dev/shm:/dev/shm vitcifar10:latest &
    ```
    
-3. Get a terminal inside the container:
+3. Get a terminal inside the container (you can execute this command multiple times to get multiple container terminals):
    ```bash
    $ docker exec -it wild_vitcifar10 /bin/zsh
    $ cd $HOME
