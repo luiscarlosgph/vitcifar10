@@ -45,8 +45,8 @@ ENV PYTORCH_INSTALL_CMD="pip install torch==1.12.1+cu116 torchvision torchaudio 
 RUN /bin/zsh -c "source $HOME/.zshrc && $PYTORCH_INSTALL_CMD"
 
 # Download and install vitcifar-10 Python module
-RUN git clone https://github.com/luiscarlosgph/vitcifar10.git $HOME
-RUN cd $HOME/vitcifar10 && python3 setup.py install
+RUN cd $HOME && git clone https://github.com/luiscarlosgph/vitcifar10.git
+RUN /bin/zsh -c "source $HOME/.zshrc && cd $HOME/vitcifar10 && python setup.py install"
 RUN rm -r $HOME/vitcifar10
 
 # Start services and run the user-specified command
