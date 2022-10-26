@@ -73,6 +73,6 @@ Luis C. Garcia Peraza Herrera (luiscarlos.gph@gmail.com).
 License
 -------
 
-This repository is licensed under an [MIT license]().
+This repository is licensed under an [MIT license](LICENSE).
 
 
