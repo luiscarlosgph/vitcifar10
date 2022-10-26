@@ -20,11 +20,25 @@ If you do not have Docker, [here](https://github.com/luiscarlosgph/how-to/tree/m
    $ docker build -t vitcifar10 .
    ```
 
-2. Run `vitcifar10` container:
+2. Launch `vitcifar10` container:
    ```bash
-   $ docker run TODO
+   $ docker run --name wild_vitcifar10 --runtime=nvidia -v /dev/shm:/dev/shm vitcifar10:latest 
    ```
-
+   
+3. Get a terminal inside the container:
+   ```bash
+   $ docker exec -it wild_vicifar10 /bin/bash
+   ```
+   
+4. Launch CIFAR-10 training:
+   ```
+   $ python3 -m vitcifar10.train --lr 1e-4 --opt adam --nepochs 200 --bs 16 --cpdir checkpoints --logdir logs --cpint 5 --data ./data
+   ```
+   
+5. Launch CIFAR-10 testing:
+   ```
+   $ python3 -m vitcifar10.test --data ./data --resume checkpoints/model_best.pt
+   ```
 
 Install with pip
 ----------------
