@@ -13,6 +13,7 @@ import torchvision
 import timm
 import tqdm
 import os
+import time
 
 # My imports
 import vitcifar10.randomaug
@@ -81,7 +82,11 @@ def load_dataset(train_preproc_tf, valid_preproc_tf, data_dir='./data', train_bs
                                            transform=valid_preproc_tf)
     
     # Create train/val split of the CIFAR-10 training set
-    num_train = len(train_dataset)
+    num_train = len(train_ds)
+
+    # FIXME: for debugging purposes, remove for production
+    num_train = 100
+
     indices = list(range(num_train))
     split = int(np.floor(valid_size * num_train))
 
@@ -96,11 +101,9 @@ def load_dataset(train_preproc_tf, valid_preproc_tf, data_dir='./data', train_bs
     # Create dataloaders
     train_dl = torch.utils.data.DataLoader(train_ds, batch_size=train_bs, 
                                            sampler=train_sampler,
-                                           shuffle=True, 
                                            num_workers=num_workers)
     valid_dl = torch.utils.data.DataLoader(valid_ds, batch_size=valid_bs, 
                                           sampler=valid_sampler,
-                                          shuffle=False, 
                                           num_workers=num_workers)
 
     return train_dl, valid_dl
@@ -174,7 +177,7 @@ def resume(checkpoint_path, net, optimizer, scheduler, scaler):
     print('[INFO] Resuming from checkpoint ...')
      
     # Check that the checkpoint directory exists
-    if not os.path.isfile(args.resume):
+    if not os.path.isfile(checkpoint_path):
         raise FileNotFoundError('[ERROR] You want to resume from the last checkpoint, ' \
             + 'but there is not directory called "checkpoint"')
     
@@ -198,7 +201,7 @@ def resume(checkpoint_path, net, optimizer, scheduler, scaler):
     return state['lowest_valid_loss'], state['epoch'] + 1
 
 
-def train(net: torch.nn, train_dl, loss_func, optimizer, scaler, device='cuda'):
+def train(net: torch.nn, train_dl, loss_func, optimizer, scheduler, scaler, device='cuda'):
     """
     @brief Train the model for a single epoch.
     
@@ -238,13 +241,17 @@ def train(net: torch.nn, train_dl, loss_func, optimizer, scaler, device='cuda'):
         # Display loss and accuracy on the progress bar
         display_loss = train_loss / (batch_idx + 1)
         display_acc = 100. * correct / total
-        pbar.set_description("Loss: %.3f | Acc: %.3f%% (%d/%d)" % (display_loss, 
-            display_acc, correct, total))
+        pbar.set_description("Training loss: %.3f | Acc: %.3f%% (%d/%d) | LR: %.2E" % (display_loss, 
+            display_acc, correct, total, scheduler.get_last_lr()[0]))
+
+    # Add step to the LR cosine scheduler
+    #scheduler.step(epoch - 1)
+    scheduler.step()
 
     return display_loss, display_acc
 
 
-def valid(net: torch.nn, valid_dl, loss_func):
+def valid(net: torch.nn, valid_dl, loss_func, device='cuda'):
     """
     @param[in, out]  net        PyTorch model.
     @param[in]       valid_dl    PyTorch dataloader for the testing data.
@@ -275,7 +282,7 @@ def valid(net: torch.nn, valid_dl, loss_func):
             # Display loss and top-1 accuracy on the progress bar 
             display_loss = valid_loss / (batch_idx + 1)
             display_acc = 100. * correct / total
-            pbar.set_description("Loss: %.3f | Acc: %.3f%% (%d/%d)" % (display_loss,
+            pbar.set_description("Validation loss: %.3f | Acc: %.3f%% (%d/%d)" % (display_loss,
                 display_acc, correct, total))
     
     return display_loss, display_acc
@@ -316,11 +323,12 @@ def main():
     scaler = torch.cuda.amp.GradScaler(enabled=True)
 
     # Setup Tensorboard
-    writer = setup_tensorboard()
+    writer = setup_tensorboard(args.logdir)
 
     # Resume from the last checkpoint if requested
     lowest_valid_loss = np.inf
     start_epoch = 0
+    model_best = False
     if args.resume is not None:
         lowest_valid_loss, start_epoch = resume(args.resume, net, optimizer, scheduler, scaler)
 
@@ -336,7 +344,7 @@ def main():
         start = time.time()
 
         # Run a training epoch
-        train_loss, train_acc = train(net, train_dl, loss_func, optimizer, scaler)
+        train_loss, train_acc = train(net, train_dl, loss_func, optimizer, scheduler, scaler)
 
         # Run testing
         valid_loss, valid_acc = valid(net, valid_dl, loss_func)
@@ -344,6 +352,9 @@ def main():
         # Update lowest validation loss
         if valid_loss < lowest_valid_loss:
             lowest_valid_loss = valid_loss
+            model_best = True
+        else:
+            model_best = False
 
         # Save checkpoint
         print('[INFO] Saving model for this epoch ...')
@@ -362,14 +373,11 @@ def main():
         print('[INFO] Saved.')
 
         # If it is the best model, let's copy it
-        if valid_loss < lowest_valid_loss:
+        if model_best:
             print('[INFO] Saving best model ...')
-            model_best_path = os.path.join(args.cpdir, 'model_best_{}.pt'.format(epoch))
+            model_best_path = os.path.join(args.cpdir, 'model_best.pt')
             torch.save(state, model_best_path) 
             print('[INFO] Saved.')
-        
-        # Add step to the LR cosine scheduler
-        scheduler.step(epoch - 1)
         
         # Store training losses and metrics
         train_loss_over_epochs.append(train_loss)
