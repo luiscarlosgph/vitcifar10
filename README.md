@@ -96,8 +96,8 @@ TODO
 -->
 
 
-Training and testing splits
----------------------------
+Training/validation/testing splits
+----------------------------------
 
 This code uses [torchvision](https://pytorch.org/vision/stable/generated/torchvision.datasets.CIFAR10.html) to download and load the CIFAR-10 dataset. The constructor of the class `torchvision.datasets.CIFAR10` has a boolean parameter called `train`. 
 
