@@ -41,6 +41,7 @@ def help(short_option):
         '--logdir':  'Path to the log directory (required: True)',
         '--resume':  'Path to the checkpoint file (required: False)',
         '--cpint':   'Checkpoint interval (required: True)',  
+        '--data':    'Path to the CIFAR-10 data directory (required: True)',
     }
     return help_msg[short_option]
 
@@ -62,13 +63,15 @@ def parse_cmdline_params():
                       help=help('--logdir'))
     args.add_argument('--cpint', required=True, type=int,
                       help=help('--cpint'))
+    args.add_argument('--data', required=True, type=str,
+                      help=help('--data'))
     args.add_argument('--resume', required=False, type=str, default=None,
                       help=help('--resume'))
     
     return  args.parse_args()
 
 
-def load_dataset(train_preproc_tf, valid_preproc_tf, data_dir='./data', train_bs: int = 512, 
+def load_dataset(train_preproc_tf, valid_preproc_tf, data_dir, train_bs: int = 512, 
                  valid_bs: int = 100, num_workers: int = 8, valid_size: float = 0.1):
     """
     @brief Function that creates the dataloaders of CIFAR-10.
@@ -254,7 +257,8 @@ def main():
     train_preproc_tf, valid_preproc_tf = vitcifar10.build_preprocessing_transforms()
 
     # Get dataloaders for training and testing
-    train_dl, valid_dl = load_dataset(train_preproc_tf, valid_preproc_tf, train_bs=args.bs)
+    train_dl, valid_dl = load_dataset(train_preproc_tf, valid_preproc_tf, 
+                                      args.data, train_bs=args.bs)
 
     # Build model
     net = vitcifar10.build_model()

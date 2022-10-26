@@ -20,12 +20,12 @@ Train on CIFAR-10
 * Launch training:
 
 ```bash
-$ python3 -m vitcifar10.train --lr 1e-4 --opt adam --nepochs 200 --bs 16 --cpdir checkpoints --logdir logs --cpint 5
+$ python3 -m vitcifar10.train --lr 1e-4 --opt adam --nepochs 200 --bs 16 --cpdir checkpoints --logdir logs --cpint 5 --data ./data
 ```
 
 * Resume training from a checkpoint:
 ```bash
-$ python3 -m vitcifar10.train --lr 1e-4 --opt adam --nepochs 200 --bs 16 --cpdir checkpoints --logdir logs --cpint 5 --resume checkpoints/epoch_21.pt
+$ python3 -m vitcifar10.train --lr 1e-4 --opt adam --nepochs 200 --bs 16 --cpdir checkpoints --logdir logs --cpint 5 --data ./data --resume checkpoints/epoch_21.pt
 ```
 
 * Options:
@@ -37,6 +37,7 @@ $ python3 -m vitcifar10.train --lr 1e-4 --opt adam --nepochs 200 --bs 16 --cpdir
    * `--logdir`: path to the directory where the Tensorboard logs will be saved.
    * `--cpint`: interval of epochs to save a checkpoint of the training process.
    * `--resume`: path to the checkpoint file you want to resume.
+   * `--data`: path to the directory where the dataset will be stored.
 
 
 * Launch Tensorboard:
@@ -50,8 +51,13 @@ Test on CIFAR-10
 ----------------
 
 ```bash
-$ TODO
+$ python3 -m vitcifar10.test --data ./data --resume checkpoints/model_best.pt
 ```
+
+* Options:
+   * `--data`: path to the directory where the dataset will be stored.
+   * `--resume`: path to the checkpoint file you want to test.
+
 
 Perform inference on a single image
 -----------------------------------

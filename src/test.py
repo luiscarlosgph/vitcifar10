@@ -6,6 +6,11 @@
 @date   26 Oct 2022.
 """
 
+import argparse
+import numpy as np
+import torch
+import torchvision
+
 # My imports
 import vitcifar10
 
@@ -22,6 +27,7 @@ def help(short_option):
     @returns The string with the help information for each command line option.
     """
     help_msg = {
+        '--data':    'Path to the CIFAR-10 data directory (required: True)',
         '--resume':  'Path to the checkpoint file (required: True)',
     }
     return help_msg[short_option]
@@ -30,13 +36,15 @@ def help(short_option):
 def parse_cmdline_params():
     """@returns The argparse args object."""
     args = argparse.ArgumentParser(description='PyTorch ViT for training/validation on CIFAR-10.')
+    args.add_argument('--data', required=True, type=str,
+                      help=help('--data'))
     args.add_argument('--resume', required=True, type=str,
                       help=help('--resume'))
     
     return  args.parse_args()
 
 
-def load_dataset(test_preproc_tf, data_dir='./data', num_workers: int = 8):
+def load_dataset(test_preproc_tf, data_dir, num_workers: int = 8):
     # Load testing set
     test_ds = torchvision.datasets.CIFAR10(root=data_dir, train=False,
                                            download=True, 
@@ -57,7 +65,7 @@ def main():
     _, test_preproc_tf = vitcifar10.build_preprocessing_transforms()
 
     # Get dataloaders for training and testing
-    test_dl = load_dataset(test_preproc_tf)
+    test_dl = load_dataset(test_preproc_tf, data_dir=args.data)
 
     # Build model
     net = vitcifar10.build_model()
