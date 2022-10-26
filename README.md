@@ -34,6 +34,7 @@ $ python3 -m vitcifar10.train --lr 1e-4 --opt adam --nepochs 200 --bs 16 --cpdir
    * `--cpdir`: checkpoint directory.
    * `--logdir`: path to the directory where the Tensorboard logs will be saved.
    * `--cpint`: interval of epochs to save a checkpoint of the training process.
+   * `--resume`: path to the checkpoint file you want to resume.
 
 
 * Launch Tensorboard:
