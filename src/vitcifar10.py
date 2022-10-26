@@ -72,5 +72,42 @@ def setup_tensorboard(log_dir) -> torch.utils.tensorboard.SummaryWriter:
     return writer
 
 
+def valid(net: torch.nn, valid_dl, loss_func, device='cuda'):
+    """
+    @param[in, out]  net        PyTorch model.
+    @param[in]       valid_dl    PyTorch dataloader for the testing data.
+    @param[in]       loss_func  Pointer to the loss function.
+    """
+    valid_loss = 0
+    correct = 0
+    total = 0
+
+    net.eval()
+    with torch.no_grad():
+        # Create progress bar
+        pbar = tqdm.tqdm(enumerate(valid_dl), total=len(valid_dl))
+        
+        # Loop over testing data points
+        for batch_idx, (inputs, targets) in pbar:
+            # Perform inference
+            inputs, targets = inputs.to(device), targets.to(device)
+            outputs = net(inputs)
+
+            # Compute losses and metrics
+            loss = loss_func(outputs, targets)
+            valid_loss += loss.item()
+            _, predicted = outputs.max(1)
+            total += targets.size(0)
+            correct += predicted.eq(targets).sum().item()
+
+            # Display loss and top-1 accuracy on the progress bar 
+            display_loss = valid_loss / (batch_idx + 1)
+            display_acc = 100. * correct / total
+            pbar.set_description("Validation loss: %.3f | Acc: %.3f%% (%d/%d)" % (display_loss,
+                display_acc, correct, total))
+    
+    return display_loss, display_acc
+
+
 if __name__ == '__main__':
     raise RuntimeError('[ERROR] The module vitcifar10 is not supposed to be run as an executable.')
