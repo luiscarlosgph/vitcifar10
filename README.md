@@ -48,7 +48,7 @@ Install with pip
 ----------------
 
 ```bash
-$ pip install vitcifar10
+$ pip install vitcifar10 --user
 ```
 
 
