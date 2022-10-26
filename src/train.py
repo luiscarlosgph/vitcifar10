@@ -89,8 +89,8 @@ def load_dataset(train_preproc_tf, valid_preproc_tf, data_dir='./data', train_bs
     # Create train/val split of the CIFAR-10 training set
     num_train = len(train_ds)
 
-    # FIXME: for debugging purposes, remove for production
-    num_train = 100
+    # FIXME: for debugging purposes, comment line below in production
+    #num_train = 100
 
     indices = list(range(num_train))
     split = int(np.floor(valid_size * num_train))
