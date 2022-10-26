@@ -22,7 +22,7 @@ If you do not have Docker, [here](https://github.com/luiscarlosgph/how-to/tree/m
 
 2. Run `vitcifar10` container:
    ```bash
-   $ TODO
+   $ docker run TODO
    ```
 
 
