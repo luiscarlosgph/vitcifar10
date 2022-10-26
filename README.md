@@ -5,6 +5,8 @@ This repository contains the Python package `vitcifar10`, which is a Vision Tran
 
 The idea of this repository is not to have a very flexible implementation, but one that can be used as a baseline for research with results on testing close to the state of the art.
 
+This module relies on [timm](https://github.com/rwightman/pytorch-image-models).
+
 
 Use within a Docker container
 ---------------------------
