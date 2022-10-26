@@ -29,7 +29,9 @@ If you do not have Docker, [here](https://github.com/luiscarlosgph/how-to/tree/m
 Install with pip
 ----------------
 
-TODO
+```bash
+$ pip install vitcifar10
+```
 
 
 Install from source
