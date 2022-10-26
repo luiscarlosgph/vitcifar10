@@ -251,13 +251,13 @@ def main():
     args = parse_cmdline_params()
 
     # Prepare preprocessing layers
-    train_preproc_tf, valid_preproc_tf = build_preprocessing_transforms()
+    train_preproc_tf, valid_preproc_tf = vitcifar10.build_preprocessing_transforms()
 
     # Get dataloaders for training and testing
     train_dl, valid_dl = load_dataset(train_preproc_tf, valid_preproc_tf, train_bs=args.bs)
 
     # Build model
-    net = build_model()
+    net = vitcifar10.build_model()
 
     # Use cross-entropy loss
     loss_func = torch.nn.CrossEntropyLoss()
@@ -272,7 +272,7 @@ def main():
     scaler = torch.cuda.amp.GradScaler(enabled=True)
 
     # Setup Tensorboard
-    writer = setup_tensorboard(args.logdir)
+    writer = vitcifar10.setup_tensorboard(args.logdir)
 
     # Resume from the last checkpoint if requested
     lowest_valid_loss = np.inf

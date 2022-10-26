@@ -8,6 +8,11 @@
 
 import torch
 import torch.utils.tensorboard
+import torchvision
+import timm
+
+# My imports
+import vitcifar10
 
 
 def build_model(nclasses: int = 10):
@@ -46,7 +51,7 @@ def build_preprocessing_transforms(size: int = 384, randaug_n: int = 2,
     ])
 
     # Data augmentation
-    train_preproc_tf.transforms.insert(0, vitcifar10.randomaug.RandAugment(randaug_n, randaug_m))
+    train_preproc_tf.transforms.insert(0, vitcifar10.RandAugment(randaug_n, randaug_m))
     
     # Preprocessing for testing
     valid_preproc_tf = torchvision.transforms.Compose([
