@@ -40,6 +40,7 @@ def help(short_option):
         '--cpdir':   'Path to the checkpoint directory (required: True)', 
         '--logdir':  'Path to the log directory (required: True)',
         '--resume':  'Path to the checkpoint file (required: False)',
+        '--cpint':   'Checkpoint interval (required: True)',  
     }
     return help_msg[short_option]
 
@@ -59,6 +60,8 @@ def parse_cmdline_params():
                       help=help('--cpdir'))
     args.add_argument('--logdir', required=True, type=str,
                       help=help('--logdir'))
+    args.add_argument('--cpint', required=True, type=int,
+                      help=help('--cpint'))
     args.add_argument('--resume', required=False, type=str, default=None,
                       help=help('--resume'))
     
@@ -359,20 +362,21 @@ def main():
             model_best = False
 
         # Save checkpoint
-        print('[INFO] Saving model for this epoch ...')
-        state = {
-            "net":               net.state_dict(),
-            "optimizer":         optimizer.state_dict(),
-            "scheduler":         scheduler.state_dict(),
-            "scaler":            scaler.state_dict(),
-            "lowest_valid_loss": lowest_valid_loss,
-            "epoch":             epoch,
-        }
-        if not os.path.isdir(args.cpdir):
-            os.mkdir(args.cpdir)
-        checkpoint_path = os.path.join(args.cpdir, "epoch_{}.pt".format(epoch))
-        torch.save(state, checkpoint_path) 
-        print('[INFO] Saved.')
+        if epoch % args.cpint == 0:
+            print('[INFO] Saving model for this epoch ...')
+            state = {
+                "net":               net.state_dict(),
+                "optimizer":         optimizer.state_dict(),
+                "scheduler":         scheduler.state_dict(),
+                "scaler":            scaler.state_dict(),
+                "lowest_valid_loss": lowest_valid_loss,
+                "epoch":             epoch,
+            }
+            if not os.path.isdir(args.cpdir):
+                os.mkdir(args.cpdir)
+            checkpoint_path = os.path.join(args.cpdir, "epoch_{}.pt".format(epoch))
+            torch.save(state, checkpoint_path) 
+            print('[INFO] Saved.')
 
         # If it is the best model, let's copy it
         if model_best:
