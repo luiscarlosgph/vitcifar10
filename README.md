@@ -101,7 +101,7 @@ Training/validation/testing splits
 
 This code uses [torchvision](https://pytorch.org/vision/stable/generated/torchvision.datasets.CIFAR10.html) to download and load the CIFAR-10 dataset. The constructor of the class `torchvision.datasets.CIFAR10` has a boolean parameter called `train`. 
 
-In our code we set `train=True` to obtain the images for training and validation, using 90% for **training** (45K images) and 10% for **validation** (5K images). The validation set is used to discover the best model during training (could also be used for hyperparameter tunning or early stopping). For **testing**, we set `train=False`. The testing set contains the usual 10K images. 
+In our code we set `train=True` to obtain the images for training and validation, using 90% for **training** (45K images) and 10% for **validation** (5K images). The validation set is used to discover the best model during training (could also be used for hyperparameter tunning or early stopping). For **testing**, we set `train=False`. The testing set contains 10K images. 
 
 
 Author
