@@ -6,6 +6,24 @@ This repository contains the Python package `vitcifar10`, which is a Vision Tran
 The idea of this repository is not to have a very flexible implementation, but one that can be used as a baseline for research with results on testing close to the state of the art.
 
 
+Use within a Docker container
+---------------------------
+
+If you do not have Docker, [here](https://github.com/luiscarlosgph/how-to/tree/main/docker) you can find a tutorial to install it.
+
+1. Build Docker image:
+```bash
+$ git clone https://github.com/luiscarlosgph/vitcifar10.git
+$ cd vitcifar10/docker
+$ docker build -t vitcifar10 .
+```
+
+2. Run `vitcifar10` container:
+```bash
+$ TODO
+```
+
+
 Install with pip
 ----------------
 
@@ -72,10 +90,7 @@ Perform inference on a single image
 
 TODO
 
-Docker container
-----------------
 
-TODO
 
 
 Author
