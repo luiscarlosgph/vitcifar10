@@ -45,14 +45,14 @@ Train on CIFAR-10
 
 * Launch training:
 
-```bash
-$ python3 -m vitcifar10.train --lr 1e-4 --opt adam --nepochs 200 --bs 16 --cpdir checkpoints --logdir logs --cpint 5 --data ./data
-```
+   ```bash
+   $ python3 -m vitcifar10.train --lr 1e-4 --opt adam --nepochs 200 --bs 16 --cpdir checkpoints --logdir logs --cpint 5 --data ./data
+   ```
 
 * Resume training from a checkpoint:
-```bash
-$ python3 -m vitcifar10.train --lr 1e-4 --opt adam --nepochs 200 --bs 16 --cpdir checkpoints --logdir logs --cpint 5 --data ./data --resume checkpoints/epoch_21.pt
-```
+   ```bash
+   $ python3 -m vitcifar10.train --lr 1e-4 --opt adam --nepochs 200 --bs 16 --cpdir checkpoints --logdir logs --cpint 5 --data ./data --resume   checkpoints/epoch_21.pt
+   ```
 
 * Options:
    * `--lr`: learning rate.
