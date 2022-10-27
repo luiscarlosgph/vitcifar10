@@ -10,7 +10,7 @@ import argparse
 import numpy as np
 import torch
 import torchvision
-import cv2
+import PIL
 
 # My imports
 import vitcifar10
@@ -41,43 +41,30 @@ def main():
     args = parse_cmdline_params()
 
     # Prepare preprocessing layers
-    _, test_preproc_tf = vitcifar10.build_preprocessing_transforms()
+    _, test_preproc_tf = vitcifar10.build_preprocessing_transforms(size=(384,384))
 
     # Load the image
-    im_bgr = cv2.imread(args.image, cv2.IMREAD_UNCHANGED)
-    height, width, channels = im.shape
-    if channels != 3:
+    im_rgb = PIL.Image.open(args.image)
+    if len(im_rgb.getbands()) != 3:
         raise ValueError('[ERROR] The input image must be a colour image.')
 
-    # Convert image to RGB
-    im_rgb = im_bgr[...,::-1].copy() 
-
-    # Put channels before height and width
-    im_rgb = im_rgb.transpose((2, 0, 1))
-
-    # Add the batch dimension
-    im_rgb = im_rgb[np.newaxis, ...]
-    
-    # Create Torch tensor and move it to GPU
-    im = torch.tensor(im_rgb).to('cuda')
-
-    # Preprocess image
-    im = test_preproc_tf(im)
-     
     # Build model
     net = vitcifar10.build_model()
 
     # Load weights from file
-    state = torch.load(args.resume) 
+    state = torch.load(args.model) 
     net.load_state_dict(state['net'])
 
+    # Preprocess image
+    im_tensor = test_preproc_tf(im_rgb).to('cuda')
+
     # Run inference 
-    output = net(im_rgb) 
+    output = torch.argmax(net(torch.unsqueeze(im_tensor, 0))).item()
     
     # Print result
-    cifar10_classes = ['plane', 'car', 'bird', 'cat', 'deer', 
-                       'dog', 'frog', 'horse', 'ship', 'truck']
-    print('Class predicted:', output)
+    cifar10_classes = ('plane', 'car', 'bird', 'cat', 'deer', 
+                       'dog', 'frog', 'horse', 'ship', 'truck')
+    print("It is a {}!".format(cifar10_classes[output]))
 
 
 if __name__ == '__main__':
