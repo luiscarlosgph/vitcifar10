@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 """
 @brief  Main script to kick off the training.
+        Some of this code has been inspired by: https://github.com/kentaroy47/vision-transformers-cifar10    
 @author Luis Carlos Garcia Peraza Herrera (luiscarlos.gph@gmail.com).
 @date   25 Oct 2022.
 """
