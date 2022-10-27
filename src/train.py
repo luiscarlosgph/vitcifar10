@@ -16,16 +16,10 @@ import timm
 import tqdm
 import os
 import time
+import random
 
 # My imports
 import vitcifar10
-
-# Fix random seeds for reproducibility
-seed = 0
-torch.manual_seed(seed)
-torch.backends.cudnn.deterministic = True
-torch.backends.cudnn.benchmark = False
-np.random.seed(seed)
 
 
 def help(short_option):
@@ -42,6 +36,7 @@ def help(short_option):
         '--resume':  'Path to the checkpoint file (required: False)',
         '--cpint':   'Checkpoint interval (required: True)',  
         '--data':    'Path to the CIFAR-10 data directory (required: True)',
+        '--seed':    'Random seed (required: False)',
     }
     return help_msg[short_option]
 
@@ -67,6 +62,8 @@ def parse_cmdline_params():
                       help=help('--data'))
     args.add_argument('--resume', required=False, type=str, default=None,
                       help=help('--resume'))
+    args.add_argument('--seed', required=False, type=int, default=None,
+                      help=help('--seed'))
     
     return  args.parse_args()
 
@@ -214,6 +211,14 @@ def train(net: torch.nn, train_dl, loss_func, optimizer, scheduler, scaler, devi
 def main():
     # Parse command line parameters
     args = parse_cmdline_params()
+
+    # Fix random seeds for reproducibility
+    if args.seed is None:
+        args.seed = random.SystemRandom().randrange(0, 2**32)
+    torch.manual_seed(args.seed)
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = False
+    np.random.seed(args.seed)
 
     # Prepare preprocessing layers
     train_preproc_tf, valid_preproc_tf = vitcifar10.build_preprocessing_transforms()
