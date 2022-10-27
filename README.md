@@ -101,7 +101,7 @@ Test on CIFAR-10
 ----------------
 
 ```bash
-$ python3 -m vitcifar10.test --data ./data --resume checkpoints/model_best.pt
+$ python3 -m vitcifar10.test --data ./data --resume checkpoints/model_best.pt --bs 1
 ```
 
 * Options:
