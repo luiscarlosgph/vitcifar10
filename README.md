@@ -88,6 +88,7 @@ Train on CIFAR-10
    * `--cpint`: interval of epochs to save a checkpoint of the training process.
    * `--resume`: path to the checkpoint file you want to resume.
    * `--data`: path to the directory where the dataset will be stored.
+   * `--seed`: fix random seed for reproducibility.
 
 
 * Launch Tensorboard:
