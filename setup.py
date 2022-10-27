@@ -19,7 +19,7 @@ setuptools.setup(name='vitcifar10',
     author='Luis C. Garcia-Peraza Herrera',
     author_email='luiscarlos.gph@gmail.com',
     license='MIT License',
-    url='https://github.com/luiscarlosgph/dentalseg',
+    url='https://github.com/luiscarlosgph/vitcifar10',
     packages=[
         'vitcifar10',
     ],
