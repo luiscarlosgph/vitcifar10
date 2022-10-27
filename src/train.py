@@ -83,9 +83,9 @@ def load_dataset(train_preproc_tf, valid_preproc_tf, data_dir, train_bs: int = 5
     train_ds = torchvision.datasets.CIFAR10(root=data_dir, train=True, 
                                             download=True, 
                                             transform=train_preproc_tf)
-    valid_ds = torchvision.datasets.CIFAR10(root=data_dir, train=True,
-                                           download=True, 
-                                           transform=valid_preproc_tf)
+    #valid_ds = torchvision.datasets.CIFAR10(root=data_dir, train=True,
+    #                                       download=True, 
+    #                                       transform=valid_preproc_tf)
     
     # Create train/val split of the CIFAR-10 training set
     num_train = len(train_ds)
@@ -108,9 +108,9 @@ def load_dataset(train_preproc_tf, valid_preproc_tf, data_dir, train_bs: int = 5
     train_dl = torch.utils.data.DataLoader(train_ds, batch_size=train_bs, 
                                            sampler=train_sampler,
                                            num_workers=num_workers)
-    valid_dl = torch.utils.data.DataLoader(valid_ds, batch_size=valid_bs, 
-                                          sampler=valid_sampler,
-                                          num_workers=num_workers)
+    valid_dl = torch.utils.data.DataLoader(train_ds, batch_size=valid_bs, 
+                                           sampler=valid_sampler,
+                                           num_workers=num_workers)
 
     return train_dl, valid_dl
 
