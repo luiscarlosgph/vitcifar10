@@ -74,7 +74,7 @@ def load_dataset(train_preproc_tf, valid_preproc_tf, data_dir, train_bs: int = 5
     @brief Function that creates the dataloaders of CIFAR-10.
 
     @param[in]  train_bs  Training batch size.
-    @param[in]  valid_bs   Testing batch size.
+    @param[in]  valid_bs  Testing batch size.
 
     @returns a tuple with the training and validation dataloaders.
     """
