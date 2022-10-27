@@ -82,6 +82,8 @@ def valid(net: torch.nn, valid_dl, loss_func, device='cuda'):
     valid_loss = 0
     correct = 0
     total = 0
+    y_true = []
+    y_pred = []
 
     net.eval()
     with torch.no_grad():
@@ -93,6 +95,10 @@ def valid(net: torch.nn, valid_dl, loss_func, device='cuda'):
             # Perform inference
             inputs, targets = inputs.to(device), targets.to(device)
             outputs = net(inputs)
+            
+            # Store top class prediction and ground truth label
+            y_true.append(targets[0].item())
+            y_pred.append(torch.argmax(outputs).item())
 
             # Compute losses and metrics
             loss = loss_func(outputs, targets)
@@ -107,7 +113,7 @@ def valid(net: torch.nn, valid_dl, loss_func, device='cuda'):
             pbar.set_description("Validation loss: %.3f | Acc: %.3f%% (%d/%d)" % (display_loss,
                 display_acc, correct, total))
     
-    return display_loss, display_acc
+    return display_loss, display_acc, y_true, y_pred
 
 
 if __name__ == '__main__':

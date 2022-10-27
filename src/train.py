@@ -262,7 +262,7 @@ def main():
         train_loss, train_acc = train(net, train_dl, loss_func, optimizer, scheduler, scaler)
 
         # Run testing
-        valid_loss, valid_acc = vitcifar10.valid(net, valid_dl, loss_func)
+        valid_loss, valid_acc, _, _ = vitcifar10.valid(net, valid_dl, loss_func)
 
         # Update lowest validation loss
         if valid_loss < lowest_valid_loss:
