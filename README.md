@@ -112,10 +112,14 @@ $ python3 -m vitcifar10.test --data ./data --resume checkpoints/model_best.pt --
 Perform inference on a single image
 -----------------------------------
 
+After training, you can classify images such as this [dog](data/dog.jpg) or this [cat](data/cat.jpg) following:
+
 ```bash
 $ python3 -m vitcifar10.inference --image data/dog.jpg --model checkpoints/model_best.pt 
 It is a dog!
+```
 
+```bash
 $ python3 -m vitcifar10.inference --image data/cat.jpg --model checkpoints/model_best.pt
 It is a cat!
 ```
