@@ -1,5 +1,9 @@
 """
-@brief Code in this file is adpated from rpmcruz/autoaugment:
+@brief Code taken from: 
+
+       https://github.com/kentaroy47/vision-transformers-cifar10
+       
+       which has been adapted from rpmcruz/autoaugment:
        
        https://github.com/rpmcruz/autoaugment/blob/master/transformations.py
 """
