@@ -253,6 +253,10 @@ def main():
     if args.resume is not None:
         lowest_valid_loss, start_epoch = resume(args.resume, net, optimizer, scheduler, scaler)
 
+    # Enable multi-GPU support
+    net = torch.nn.DataParallel(net)
+    torch.backends.cudnn.benchmark = True 
+
     # Create lists to store the losses and metrics
     train_loss_over_epochs = []
     train_acc_over_epochs = []
