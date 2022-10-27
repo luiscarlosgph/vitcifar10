@@ -16,13 +16,6 @@ import sklearn.metrics
 # My imports
 import vitcifar10
 
-# Fix random seeds for reproducibility
-seed = 0
-torch.manual_seed(seed)
-torch.backends.cudnn.deterministic = True
-torch.backends.cudnn.benchmark = False
-np.random.seed(seed)
-
 
 def help(short_option):
     """
