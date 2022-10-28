@@ -35,7 +35,8 @@ def help(option):
 
 def parse_cmdline_params():
     """@returns The argparse args object."""
-    args = argparse.ArgumentParser(description='Run many training cycles of the ViT on CIFAR-10.')
+    desc = 'Run many training cycles of the ViT on CIFAR-10.'
+    args = argparse.ArgumentParser(description=desc)
     args.add_argument('--lr', required=True, type=float, 
                       help=help('--lr'))  
     args.add_argument('--opt', required=True, type=str, 
@@ -59,6 +60,9 @@ def parse_cmdline_params():
 
 
 def find_last_epoch(checkpoint_path: str) -> str:
+    """
+    @brief 
+    """
     list_of_files = glob.glob(checkpoint_path + '/*.pt')
     latest_file = max(list_of_files, key=os.path.getctime)
     return latest_file
@@ -88,8 +92,7 @@ def main():
         
         # Resume from the last checkpoint if indicated by the user
         if args.resume:
-            last_epoch_path = find_last_epoch(iter_cpdir)
-            cmd += " --resume " + last_epoch_path
+            cmd += " --resume " + find_last_epoch(iter_cpdir)
 
         # Launch training in a subshell 
         os.system(cmd + " &")
