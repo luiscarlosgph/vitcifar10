@@ -9,6 +9,7 @@ import argparse
 import os
 import glob
 import random
+import natsort
 
 # My imports
 import vitcifar10
@@ -66,8 +67,8 @@ def find_last_epoch(checkpoint_path: str) -> str:
     @brief Find the .pt file corresponding to the last epoch.
     @returns the path to the file.
     """
-    list_of_files = glob.glob(checkpoint_path + '/*.pt')
-    latest_file = max(list_of_files, key=os.path.getctime)
+    list_of_files = [x for x in glob.glob(checkpoint_path + '/*.pt') if 'epoch_' in x]
+    latest_file = natsort.natsorted(list_of_files, alg=natsort.ns.IGNORECASE)[-1]
     return latest_file
 
 
@@ -76,20 +77,20 @@ def main():
     args = parse_cmdline_params()
 
     # Loop of training cycles
-    for i in range(args.niter):
+    for i in range(0, args.niter):
         # Get random seed 
         seed = random.SystemRandom().randrange(0, 2**32)
 
         # Create training command for this cycle
-        iter_cpdir = os.path.join(args.cpdir, "/iter_" + str(i))
+        iter_cpdir = args.cpdir + "/iter_" + str(i)
         cmd = "python3 -m vitcifar10.train " \
-            + "--lr " + args.lr + " " \
+            + "--lr " + str(args.lr) + " " \
             + "--opt " + args.opt + " " \
-            + "--nepochs " + args.nepochs + " " \
-            + "--bs " + args.bs + " " \
+            + "--nepochs " + str(args.nepochs) + " " \
+            + "--bs " + str(args.bs) + " " \
             + "--cpdir " + iter_cpdir + " " \
             + "--logdir " + args.logdir + "/iter_" + str(i) + " " \
-            + "--cpint " + args.cpint + " " \
+            + "--cpint " + str(args.cpint) + " " \
             + "--data " + args.data + " " \
             + "--seed " + str(seed)
         
