@@ -37,6 +37,8 @@ def parse_cmdline_params():
     """@returns The argparse args object."""
     desc = 'Run many training cycles of the ViT on CIFAR-10.'
     args = argparse.ArgumentParser(description=desc)
+    args.add_argument('--niter', required=True, type=int, 
+                      help=help('--niter'))  
     args.add_argument('--lr', required=True, type=float, 
                       help=help('--lr'))  
     args.add_argument('--opt', required=True, type=str, 
@@ -61,7 +63,8 @@ def parse_cmdline_params():
 
 def find_last_epoch(checkpoint_path: str) -> str:
     """
-    @brief 
+    @brief Find the .pt file corresponding to the last epoch.
+    @returns the path to the file.
     """
     list_of_files = glob.glob(checkpoint_path + '/*.pt')
     latest_file = max(list_of_files, key=os.path.getctime)
@@ -95,7 +98,8 @@ def main():
             cmd += " --resume " + find_last_epoch(iter_cpdir)
 
         # Launch training in a subshell 
-        os.system(cmd + " &")
+        #os.system(cmd + " &")
+        os.system(cmd)
 
 
 if __name__ == '__main__':
