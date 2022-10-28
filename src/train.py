@@ -23,7 +23,7 @@ import random
 import vitcifar10
 
 
-def help(short_option):
+def help(option):
     """
     @returns The string with the help information for each command line option.
     """
@@ -34,12 +34,12 @@ def help(short_option):
         '--bs':      'Training batch size (required: True)',
         '--cpdir':   'Path to the checkpoint directory (required: True)', 
         '--logdir':  'Path to the log directory (required: True)',
-        '--resume':  'Path to the checkpoint file (required: False)',
         '--cpint':   'Checkpoint interval (required: True)',  
         '--data':    'Path to the CIFAR-10 data directory (required: True)',
+        '--resume':  'Path to the checkpoint file (required: False)',
         '--seed':    'Random seed (required: False)',
     }
-    return help_msg[short_option]
+    return help_msg[option]
 
 
 def parse_cmdline_params():
