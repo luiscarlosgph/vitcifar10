@@ -97,6 +97,16 @@ Train on CIFAR-10
    $ python3 -m  tensorboard.main --logdir logs --bind_all
    ```
 
+Run multiple training cycles with different seeds
+-------------------------------------------------
+
+```bash
+$ python3 -m vitcifar10.run --lr 1e-4 --opt adam --nepochs 200 --bs 16 --cpdir checkpoints --logdir logs --cpint 5 --resume 0 --niter 5 --data data
+```
+* Options:
+   * `--niter`: number of training cycles to run, e.g. `--niter 5` will lead to training five networks.
+   * `--resume`: set it to 1 if you want to resume the training.
+   
 
 Test on CIFAR-10
 ----------------
