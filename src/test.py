@@ -68,6 +68,10 @@ def main():
     # Build model
     net = vitcifar10.build_model()
 
+    # Enable multi-GPU support
+    net = torch.nn.DataParallel(net)
+    torch.backends.cudnn.benchmark = True
+
     # Load weights from file
     state = torch.load(args.resume) 
     net.load_state_dict(state['net'])
