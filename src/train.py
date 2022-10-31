@@ -254,6 +254,7 @@ def main(args, train_dl=None, valid_dl=None):
     model_best = False
     if args.resume is not None:
         lowest_valid_loss, start_epoch = resume(args.resume, net, optimizer, scheduler, scaler)
+        print('[INFO] Resuming from checkpoint:', start_epoch)
 
     # Create lists to store the losses and metrics
     train_loss_over_epochs = []
@@ -279,24 +280,26 @@ def main(args, train_dl=None, valid_dl=None):
         else:
             model_best = False
 
-        # Save checkpoint
+        # Update state
+        state = {
+            "net":               net.state_dict(),
+            "optimizer":         optimizer.state_dict(),
+            "scheduler":         scheduler.state_dict(),
+            "scaler":            scaler.state_dict(),
+            "lowest_valid_loss": lowest_valid_loss,
+            "epoch":             epoch,
+        }
+
+        # Save temporary checkpoint
         if epoch % args.cpint == 0:
             print('[INFO] Saving model for this epoch ...')
-            state = {
-                "net":               net.state_dict(),
-                "optimizer":         optimizer.state_dict(),
-                "scheduler":         scheduler.state_dict(),
-                "scaler":            scaler.state_dict(),
-                "lowest_valid_loss": lowest_valid_loss,
-                "epoch":             epoch,
-            }
             if not os.path.isdir(args.cpdir):
                 os.mkdir(args.cpdir)
             checkpoint_path = os.path.join(args.cpdir, "epoch_{}.pt".format(epoch))
             torch.save(state, checkpoint_path) 
             print('[INFO] Saved.')
 
-        # If it is the best model, let's copy it
+        # If it is the best model, let's save it too
         if model_best:
             print('[INFO] Saving best model ...')
             model_best_path = os.path.join(args.cpdir, 'model_best.pt')

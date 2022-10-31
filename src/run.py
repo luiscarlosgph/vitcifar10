@@ -121,6 +121,8 @@ def run_cycles(args):
             epoch_number = int(m.group(1))
             if epoch_number < args.nepochs:
                 # It has not finished, let's resume it
+                print('Last checkpoint dir:', args_copy.cpdir)
+                print('Last checkpoint path:', path_to_last_checkpoint)
                 args_copy.resume = path_to_last_checkpoint
                 vitcifar10.train.main(args_copy)
 
