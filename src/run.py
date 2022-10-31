@@ -112,6 +112,7 @@ def run_cycles(args):
         path_to_last_checkpoint = find_last_epoch(args_copy.cpdir)
         if path_to_last_checkpoint is None:
             # If this iteration has not started at all, we run it
+            args_copy.resume = None
             vitcifar10.train.main(args_copy)
         else:
             # This iteration has started, let's see if it has finished or not
