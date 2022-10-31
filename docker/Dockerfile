@@ -47,6 +47,7 @@ RUN /bin/zsh -c "source $HOME/.zshrc && $PYTORCH_INSTALL_CMD"
 # Download and install vitcifar-10 Python module
 RUN cd $HOME && git clone https://github.com/luiscarlosgph/vitcifar10.git
 RUN /bin/zsh -c "source $HOME/.zshrc && cd $HOME/vitcifar10 && python setup.py install"
+RUN /bin/zsh -c "source $HOME/.zshrc && cd $HOME && python3 -m vitcifar10.download_data --data ./data"
 RUN rm -r $HOME/vitcifar10
 
 # Start services and run the user-specified command
