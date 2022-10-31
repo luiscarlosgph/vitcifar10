@@ -14,6 +14,8 @@ import re
 import copy
 import signal
 import sys
+import importlib
+import os
 
 # My imports
 import vitcifar10
@@ -69,15 +71,14 @@ def parse_cmdline_params():
                       help=help('--data'))
     args.add_argument('--data-loader', required=False, default=None, type=str,
                       help=help('--data-loader'))
-    #args.add_argument('--resume', required=False, type=bool, default=False,
-    #                  help=help('--resume'))
 
     # Parse arguments
     args = args.parse_args()
     
     # Get the dataloader function
     if args.data_loader is not None:
-        args.data_loader = eval(args.data_loader)
+        module_name, class_name = args.data_loader.split('.')
+        args.data_loader = getattr(__import__(module_name), class_name)
     
     return args 
 
@@ -95,7 +96,7 @@ def find_last_epoch(checkpoint_path: str) -> str:
         return None
 
 
-def run_cycles(args):
+def run_cycles(args, train_dl=None, valid_dl=None):
     """@brief Loop of training cycles."""
     for train_iter in range(0, args.niter):
         print("[INFO] Iteration {} ...".format(train_iter))
@@ -113,7 +114,7 @@ def run_cycles(args):
         if path_to_last_checkpoint is None:
             # If this iteration has not started at all, we run it
             args_copy.resume = None
-            vitcifar10.train.main(args_copy)
+            vitcifar10.train.main(args_copy, train_dl, valid_dl)
         else:
             # This iteration has started, let's see if it has finished or not
             pattern = "^.*epoch_([0-9]+).pt$"
@@ -125,7 +126,7 @@ def run_cycles(args):
                 print('Last checkpoint dir:', args_copy.cpdir)
                 print('Last checkpoint path:', path_to_last_checkpoint)
                 args_copy.resume = path_to_last_checkpoint
-                vitcifar10.train.main(args_copy)
+                vitcifar10.train.main(args_copy, train_dl, valid_dl)
 
         print("[INFO] Iteration {} finished.".format(train_iter))
 
@@ -134,13 +135,28 @@ def main():
     # Parse command line parameters
     args = parse_cmdline_params()
     
+    # Besides running several training cycles for reporting purposes,
+    # we could run an outer loop with different dataloader configurations
     if args.data_loader is None:
         run_cycles(args)
-    #else:
-    #    dl = args.data_loader()
-    #    for al_iter in range(0, len(dl)):
-    #        run_cycles(args)  
-    #        # TODO
+    else:
+        original_cpdir = args.cpdir
+        original_logdir = args.logdir
+        dl = args.data_loader(args.bs)
+        for i, (train_dl, valid_dl) in enumerate(dl):
+            args.cpdir = original_cpdir + '/' + str(dl)
+            args.logdir = original_logdir + '/' + str(dl)
+            if not os.path.isdir(args.cpdir):
+                os.mkdir(args.cpdir)
+            if not os.path.isdir(args.logdir):
+                os.mkdir(args.logdir)
+
+            # Reduce batch size if it is larger than the dataset
+            #if args.bs > len(train_dl):
+            #    args.bs = len(train_dl)
+
+            # Run as many complete training cycles as the user wants
+            run_cycles(args, train_dl, valid_dl)
 
     
 if __name__ == '__main__':
