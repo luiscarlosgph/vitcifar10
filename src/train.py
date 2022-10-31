@@ -209,10 +209,7 @@ def train(net: torch.nn, train_dl, loss_func, optimizer, scheduler, scaler, devi
     return display_loss, display_acc
 
 
-def main():
-    # Parse command line parameters
-    args = parse_cmdline_params()
-
+def main(args, train_dl=None, valid_dl=None):
     # Fix random seeds for reproducibility
     if args.seed is None:
         args.seed = random.SystemRandom().randrange(0, 2**32)
@@ -225,8 +222,9 @@ def main():
     train_preproc_tf, valid_preproc_tf = vitcifar10.build_preprocessing_transforms()
 
     # Get dataloaders for training and testing
-    train_dl, valid_dl = load_dataset(train_preproc_tf, valid_preproc_tf, 
-                                      args.data, train_bs=args.bs)
+    if train_dl is None and valid_dl is None:
+        train_dl, valid_dl = load_dataset(train_preproc_tf, valid_preproc_tf, 
+                                          args.data, train_bs=args.bs)
 
     # Build model
     net = vitcifar10.build_model()
@@ -325,4 +323,8 @@ def main():
     
 
 if __name__ == '__main__':
-    main()
+    # Parse command line parameters
+    args = parse_cmdline_params()
+
+    # Call main training function
+    main(args)

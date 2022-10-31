@@ -11,9 +11,18 @@ import glob
 import random
 import natsort
 import re
+import copy
+import signal
+import sys
 
 # My imports
 import vitcifar10
+
+
+def signal_handler(sig, frame):
+    print('[INFO] You pressed Ctrl+C, closing everything ...')
+    sys.exit(0)
+signal.signal(signal.SIGINT, signal_handler)
 
 
 def help(option):
@@ -21,16 +30,17 @@ def help(option):
     @returns The string with the help information for each command line option.
     """
     help_msg = {
-        '--niter':   'Number of training cycles to run (required: True)',
-        '--lr' :     'Learning rate (required: True)',
-        '--opt':     'Optimizer (required: True)', 
-        '--nepochs': 'Number of epochs (required: True)',
-        '--bs':      'Training batch size (required: True)',
-        '--cpdir':   'Path to the checkpoint directory (required: True)', 
-        '--logdir':  'Path to the log directory (required: True)',
-        '--cpint':   'Checkpoint interval (required: True)',  
-        '--data':    'Path to the CIFAR-10 data directory (required: True)',
-        '--resume':  'Boolean to resume all the training cycles (required: False)',
+        '--niter':       'Number of training cycles to run (required: True)',
+        '--lr' :         'Learning rate (required: True)',
+        '--opt':         'Optimizer (required: True)', 
+        '--nepochs':     'Number of epochs (required: True)',
+        '--bs':          'Training batch size (required: True)',
+        '--cpdir':       'Path to the checkpoint directory (required: True)', 
+        '--logdir':      'Path to the log directory (required: True)',
+        '--cpint':       'Checkpoint interval (required: True)',  
+        '--data':        'Path to the CIFAR-10 data directory (required: True)',
+        '--data-loader': 'String pointing to a particular active learning iterative dataloader (required: False)',
+        #'--resume':  'Boolean to resume all the training cycles (required: False)',
     }
     return help_msg[option]
 
@@ -57,10 +67,19 @@ def parse_cmdline_params():
                       help=help('--cpint'))
     args.add_argument('--data', required=True, type=str,
                       help=help('--data'))
-    args.add_argument('--resume', required=False, type=bool, default=False,
-                      help=help('--resume'))
+    args.add_argument('--data-loader', required=False, default=None, type=str,
+                      help=help('--data-loader'))
+    #args.add_argument('--resume', required=False, type=bool, default=False,
+    #                  help=help('--resume'))
+
+    # Parse arguments
+    args = args.parse_args()
     
-    return  args.parse_args()
+    # Get the dataloader function
+    if args.data_loader is not None:
+        args.data_loader = eval(args.data_loader)
+    
+    return args 
 
 
 def find_last_epoch(checkpoint_path: str) -> str:
@@ -76,56 +95,50 @@ def find_last_epoch(checkpoint_path: str) -> str:
         return None
 
 
-def main():
-    # Parse command line parameters
-    args = parse_cmdline_params()
+def run_cycles(args):
+    """@brief Loop of training cycles."""
+    for train_iter in range(0, args.niter):
+        print("[INFO] Iteration {} ...".format(train_iter))
 
-    # Loop of training cycles
-    for i in range(0, args.niter):
-        print("[INFO] Iteration {} ...".format(i))
+        # Deep copy of the arguments, they will be modified for this iteration
+        args_copy = copy.deepcopy(args)
 
-        # Get random seed 
-        seed = random.SystemRandom().randrange(0, 2**32)
-
-        # Create training command for this cycle
-        iter_cpdir = args.cpdir + "/iter_" + str(i)
-        cmd = "python3 -m vitcifar10.train " \
-            + "--lr " + str(args.lr) + " " \
-            + "--opt " + args.opt + " " \
-            + "--nepochs " + str(args.nepochs) + " " \
-            + "--bs " + str(args.bs) + " " \
-            + "--cpdir " + iter_cpdir + " " \
-            + "--logdir " + args.logdir + "/iter_" + str(i) + " " \
-            + "--cpint " + str(args.cpint) + " " \
-            + "--data " + args.data + " " \
-            + "--seed " + str(seed)
+        # Arguments we need to tweak for this specific iteration: --cpdir, --logdir, --seed
+        args_copy.cpdir = args.cpdir + "/iter_" + str(train_iter)
+        args_copy.logdir = args.logdir + "/iter_" + str(train_iter)
+        args_copy.seed = random.SystemRandom().randrange(0, 2**32)
         
-        # Resume from the last checkpoint if indicated by the user
-        path_to_last_checkpoint = None
-        if args.resume:
-            path_to_last_checkpoint = find_last_epoch(iter_cpdir)
-        
-        # Skip this iteration if we reached the last epoch
-        if path_to_last_checkpoint is not None:
-            # Resume the training of this iteration from the last epoch
-            cmd += " --resume " + path_to_last_checkpoint
-
-            # Get the epoch number and compare it with the number of epochs 
-            # passed as a command line argument
+        # Discover if the current iteration is finished, and where to resume it from 
+        path_to_last_checkpoint = find_last_epoch(args_copy.cpdir)
+        if path_to_last_checkpoint is None:
+            # If this iteration has not started at all, we run it
+            vitcifar10.train.main(args_copy)
+        else:
+            # This iteration has started, let's see if it has finished or not
             pattern = "^.*epoch_([0-9]+).pt$"
             regex = re.compile(pattern)
             m = regex.match(path_to_last_checkpoint)
             epoch_number = int(m.group(1))
-
             if epoch_number < args.nepochs:
-                os.system(cmd)
-        else:
-            # Launch training in a subshell 
-            #os.system(cmd + " &")
-            os.system(cmd)
+                # It has not finished, let's resume it
+                args_copy.resume = path_to_last_checkpoint
+                vitcifar10.train.main(args_copy)
 
-        print("[INFO] Iteration {} finished.".format(i))
+        print("[INFO] Iteration {} finished.".format(train_iter))
 
 
+def main():
+    # Parse command line parameters
+    args = parse_cmdline_params()
+    
+    if args.data_loader is None:
+        run_cycles(args)
+    #else:
+    #    dl = args.data_loader()
+    #    for al_iter in range(0, len(dl)):
+    #        run_cycles(args)  
+    #        # TODO
+
+    
 if __name__ == '__main__':
     main()
