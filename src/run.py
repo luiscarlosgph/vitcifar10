@@ -10,6 +10,7 @@ import os
 import glob
 import random
 import natsort
+import re
 
 # My imports
 import vitcifar10
@@ -68,8 +69,11 @@ def find_last_epoch(checkpoint_path: str) -> str:
     @returns the path to the file.
     """
     list_of_files = [x for x in glob.glob(checkpoint_path + '/*.pt') if 'epoch_' in x]
-    latest_file = natsort.natsorted(list_of_files, alg=natsort.ns.IGNORECASE)[-1]
-    return latest_file
+    latest_file = natsort.natsorted(list_of_files, alg=natsort.ns.IGNORECASE)
+    if latest_file:
+        return latest_file[-1]
+    else:
+        return None
 
 
 def main():
@@ -78,6 +82,8 @@ def main():
 
     # Loop of training cycles
     for i in range(0, args.niter):
+        print("[INFO] Iteration {} ...".format(i))
+
         # Get random seed 
         seed = random.SystemRandom().randrange(0, 2**32)
 
@@ -95,12 +101,30 @@ def main():
             + "--seed " + str(seed)
         
         # Resume from the last checkpoint if indicated by the user
+        path_to_last_checkpoint = None
         if args.resume:
-            cmd += " --resume " + find_last_epoch(iter_cpdir)
+            path_to_last_checkpoint = find_last_epoch(iter_cpdir)
+        
+        # Skip this iteration if we reached the last epoch
+        if path_to_last_checkpoint is not None:
+            # Resume the training of this iteration from the last epoch
+            cmd += " --resume " + path_to_last_checkpoint
 
-        # Launch training in a subshell 
-        #os.system(cmd + " &")
-        os.system(cmd)
+            # Get the epoch number and compare it with the number of epochs 
+            # passed as a command line argument
+            pattern = "^.*epoch_([0-9]+).pt$"
+            regex = re.compile(pattern)
+            m = regex.match(path_to_last_checkpoint)
+            epoch_number = int(m.group(1))
+
+            if epoch_number < args.nepochs:
+                os.system(cmd)
+        else:
+            # Launch training in a subshell 
+            #os.system(cmd + " &")
+            os.system(cmd)
+
+        print("[INFO] Iteration {} finished.".format(i))
 
 
 if __name__ == '__main__':
