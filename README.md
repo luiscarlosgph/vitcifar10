@@ -64,6 +64,14 @@ $ python3 setup.py install
 ```
 
 
+Download CIFAR-10 training and testing data
+-------------------------------------------
+
+```bash
+$ python3 -m vitcifar10.download_data --data ./data
+```
+
+
 Train on CIFAR-10
 -----------------
 
