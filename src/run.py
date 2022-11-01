@@ -96,6 +96,15 @@ def find_last_epoch(checkpoint_path: str) -> str:
         return None
 
 
+def only_model_best(checkpoint_path: str) -> bool:
+    """@returns True if 'model_best.pt' is the only file in the checkpoint folder."""
+    list_of_files = [x for x in glob.glob(checkpoint_path + '/*.pt') if 'epoch_' in x]
+    if len(list_of_files) == 1 and list_of_files[0] == 'model_best.pt':
+        return True
+    else
+        return False
+
+
 def run_cycles(args, train_dl=None, valid_dl=None):
     """@brief Loop of training cycles."""
     for train_iter in range(0, args.niter):
@@ -121,7 +130,7 @@ def run_cycles(args, train_dl=None, valid_dl=None):
             regex = re.compile(pattern)
             m = regex.match(path_to_last_checkpoint)
             epoch_number = int(m.group(1))
-            if epoch_number < args.nepochs:
+            if epoch_number < args.nepochs and not only_model_best(args_copy.cpdir):
                 # It has not finished, let's resume it
                 print('Last checkpoint dir:', args_copy.cpdir)
                 print('Last checkpoint path:', path_to_last_checkpoint)
