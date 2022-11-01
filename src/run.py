@@ -101,7 +101,7 @@ def only_model_best(checkpoint_path: str) -> bool:
     list_of_files = [x for x in glob.glob(checkpoint_path + '/*.pt') if 'epoch_' in x]
     if len(list_of_files) == 1 and list_of_files[0] == 'model_best.pt':
         return True
-    else
+    else:
         return False
 
 
