@@ -119,23 +119,24 @@ def run_cycles(args, train_dl=None, valid_dl=None):
         args_copy.seed = random.SystemRandom().randrange(0, 2**32)
         
         # Discover if the current iteration is finished, and where to resume it from 
-        path_to_last_checkpoint = find_last_epoch(args_copy.cpdir)
-        if path_to_last_checkpoint is None:
-            # If this iteration has not started at all, we run it
-            args_copy.resume = None
-            vitcifar10.train.main(args_copy, train_dl, valid_dl)
-        else:
-            # This iteration has started, let's see if it has finished or not
-            pattern = "^.*epoch_([0-9]+).pt$"
-            regex = re.compile(pattern)
-            m = regex.match(path_to_last_checkpoint)
-            epoch_number = int(m.group(1))
-            if epoch_number < args.nepochs and not only_model_best(args_copy.cpdir):
-                # It has not finished, let's resume it
-                print('Last checkpoint dir:', args_copy.cpdir)
-                print('Last checkpoint path:', path_to_last_checkpoint)
-                args_copy.resume = path_to_last_checkpoint
+        if not only_model_best(args_copy.cpdir):
+            path_to_last_checkpoint = find_last_epoch(args_copy.cpdir)
+            if path_to_last_checkpoint is None:
+                # If this iteration has not started at all, we run it
+                args_copy.resume = None
                 vitcifar10.train.main(args_copy, train_dl, valid_dl)
+            else:
+                # This iteration has started, let's see if it has finished or not
+                pattern = "^.*epoch_([0-9]+).pt$"
+                regex = re.compile(pattern)
+                m = regex.match(path_to_last_checkpoint)
+                epoch_number = int(m.group(1))
+                if epoch_number < args.nepochs:
+                    # It has not finished, let's resume it
+                    print('Last checkpoint dir:', args_copy.cpdir)
+                    print('Last checkpoint path:', path_to_last_checkpoint)
+                    args_copy.resume = path_to_last_checkpoint
+                    vitcifar10.train.main(args_copy, train_dl, valid_dl)
 
         print("[INFO] Iteration {} finished.".format(train_iter))
 
