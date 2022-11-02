@@ -117,6 +117,10 @@ def run_cycles(args, train_dl=None, valid_dl=None):
         args_copy.cpdir = args.cpdir + "/iter_" + str(train_iter)
         args_copy.logdir = args.logdir + "/iter_" + str(train_iter)
         args_copy.seed = random.SystemRandom().randrange(0, 2**32)
+
+        # Create iteration folder if it does not exist
+        if not os.path.isdir(args_copy.cpdir):
+            os.mkdir(args_copy.cpdir)
         
         # Discover if the current iteration is finished, and where to resume it from 
         if not only_model_best(args_copy.cpdir):
