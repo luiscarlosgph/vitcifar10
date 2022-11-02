@@ -98,7 +98,7 @@ def find_last_epoch(checkpoint_path: str) -> str:
 
 def only_model_best(checkpoint_path: str) -> bool:
     """@returns True if 'model_best.pt' is the only file in the checkpoint folder."""
-    list_of_files = [x for x in glob.glob(checkpoint_path + '/*.pt') if 'epoch_' in x]
+    list_of_files = [x for x in os.listdir(checkpoint_path) if not x.startswith('.')]
     if len(list_of_files) == 1 and list_of_files[0] == 'model_best.pt':
         return True
     else:
@@ -137,6 +137,11 @@ def run_cycles(args, train_dl=None, valid_dl=None):
                     print('Last checkpoint path:', path_to_last_checkpoint)
                     args_copy.resume = path_to_last_checkpoint
                     vitcifar10.train.main(args_copy, train_dl, valid_dl)
+            
+            # We have finished the training, let's remove the checkpoints
+            checkpoints = [f for f in os.listdir(args_copy.cpdir) if f.startswith('epoch_')]
+            for f in checkpoints:
+                os.remove(os.path.join(args_copy.cpdir, f))
 
         print("[INFO] Iteration {} finished.".format(train_iter))
 
