@@ -105,15 +105,31 @@ Train on CIFAR-10
    $ python3 -m  tensorboard.main --logdir logs --bind_all
    ```
 
-Run multiple training cycles with different seeds
--------------------------------------------------
+Train multiple models from scratch (different random seeds)
+-----------------------------------------------------------
 
 ```bash
 $ python3 -m vitcifar10.run --lr 1e-4 --opt adam --nepochs 100 --bs 16 --cpdir checkpoints --logdir logs --cpint 5 --niter 5 --data data
 ```
 * Options:
    * `--niter`: number of training cycles to run, e.g. `--niter 5` will lead to training five networks.
-   
+
+The rest of the options are identical to those of `vitcifar10.train`.
+
+
+Train with a custom dataloader
+-------------------------------
+
+This is useful when you want to experiment with the input/labels without modifying the model. To do so, `vitcifar10.run` accepts the parameter `--data-loader`, e.g.:
+
+```bash
+$ python3 -m vitcifar10.run --lr 1e-4 --opt adam --nepochs 100 --bs 16 --cpdir checkpoints --logdir logs --cpint 10 --niter 5 --data data --data-loader <python_class_name>
+```
+
+The dataloader class that you pass must align with the following requirements:
+   * Constructor `__init__` should accept the batch size as first parameter. 
+   * Methods `__next__` and `__iter__` should be implemented.
+
 
 Test on CIFAR-10
 ----------------
