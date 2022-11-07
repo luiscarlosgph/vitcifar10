@@ -38,7 +38,7 @@ If you do not have Docker, [here](https://github.com/luiscarlosgph/how-to/tree/m
    
 5. Launch CIFAR-10 testing:
    ```
-   $ python3 -m vitcifar10.test --data ./data --resume checkpoints/model_best.pt
+   $ python3 -m vitcifar10.test --data ./data --resume checkpoints/model_best.pt --bs 1
    ```
 
 If you want to kill the container run `$ docker kill wild_vitcifar10`. 
