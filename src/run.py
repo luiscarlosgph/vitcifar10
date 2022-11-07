@@ -41,7 +41,10 @@ def help(option):
         '--logdir':      'Path to the log directory (required: True)',
         '--cpint':       'Checkpoint interval (required: True)',  
         '--data':        'Path to the CIFAR-10 data directory (required: True)',
-        '--data-loader': 'String pointing to a particular active learning iterative dataloader (required: False)',
+        '--data-loader': 'String pointing to a particular active learning \
+                          iterative dataloader (required: False)',
+        '--data-loader-params': 'String containing a Python-style dictionary \
+                                 of parameters (required: False)'
         #'--resume':  'Boolean to resume all the training cycles (required: False)',
     }
     return help_msg[option]
@@ -71,6 +74,8 @@ def parse_cmdline_params():
                       help=help('--data'))
     args.add_argument('--data-loader', required=False, default=None, type=str,
                       help=help('--data-loader'))
+    args.add_argument('--data-loader-params', required=False, default=None,
+                      type=str, help=help('--data-loader-params'))
 
     # Parse arguments
     args = args.parse_args()
@@ -161,7 +166,16 @@ def main():
     else:
         original_cpdir = args.cpdir
         original_logdir = args.logdir
-        dl = args.data_loader(args.bs)
+
+        # Create dataloader
+        if args.data_loader_params is None: 
+            dl = args.data_loader(args.bs)
+        else:
+            # Use keyword parameters passed by command line
+            dl = args.data_loader(args.bs, **eval(args.data_loader_params))
+
+        # Loop over the dataloader iterations, if any, each iteration is
+        # implemented by the __iter__() of the dataloader
         for i, (train_dl, valid_dl) in enumerate(dl):
             args.cpdir = original_cpdir + '/' + str(dl)
             args.logdir = original_logdir + '/' + str(dl)
