@@ -227,7 +227,7 @@ def main(args, train_dl=None, valid_dl=None):
                                           args.data, train_bs=args.bs)
 
     # Build model
-    net = vitcifar10.build_model()
+    net = vitcifar10.build_model(pretrained=args.pretrained)
 
     # Enable multi-GPU support
     net = torch.nn.DataParallel(net)

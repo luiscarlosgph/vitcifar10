@@ -16,16 +16,19 @@ import tqdm
 import vitcifar10
 
 
-def build_model(nclasses: int = 10):
+def build_model(nclasses: int = 10, pretrained: bool = True):
     """
     @brief Create Vision Transformer (ViT) model pre-trained on ImageNet-21k 
            (14 million images, 21,843 classes) at resolution 224x224 
            fine-tuned on ImageNet 2012 (1 million images, 1,000 classes) 
            at resolution 384x384.
 
-    @param[in]  nclasses  Number of classes, CIFAR-10 has obviously 10 clsses.
+    @param[in]  nclasses    Number of classes, CIFAR-10 has obviously 
+                            10 classes.
+    @param[in]  pretrained  Initialise the model with the pretrained weights
+                            of ImageNet-21k and ImageNet 2012.
     """
-    net = timm.create_model('vit_base_patch16_384', pretrained=True)
+    net = timm.create_model('vit_base_patch16_384', pretrained=pretrained)
     net.head = torch.nn.Linear(net.head.in_features, nclasses)
     net.cuda()
 

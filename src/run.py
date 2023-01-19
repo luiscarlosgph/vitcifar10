@@ -44,7 +44,9 @@ def help(option):
         '--data-loader': 'String pointing to a particular active learning \
                           iterative dataloader (required: False)',
         '--data-loader-params': 'String containing a Python-style dictionary \
-                                 of parameters (required: False)'
+                                 of parameters (required: False)',
+        '--pretrained':  'Initialise model with pretrained weights \
+                          from ImageNet.',
         #'--resume':  'Boolean to resume all the training cycles (required: False)',
     }
     return help_msg[option]
@@ -76,6 +78,8 @@ def parse_cmdline_params():
                       help=help('--data-loader'))
     args.add_argument('--data-loader-params', required=False, default=None,
                       type=str, help=help('--data-loader-params'))
+    args.add_argument('--pretrained', required=False, default=True, type=bool,
+                      help=help('--pretrained'))
 
     # Parse arguments
     args = args.parse_args()
