@@ -28,16 +28,18 @@ def help(option):
     @returns The string with the help information for each command line option.
     """
     help_msg = {
-        '--lr' :     'Learning rate (required: True)',
-        '--opt':     'Optimizer (required: True)', 
-        '--nepochs': 'Number of epochs (required: True)',
-        '--bs':      'Training batch size (required: True)',
-        '--cpdir':   'Path to the checkpoint directory (required: True)', 
-        '--logdir':  'Path to the log directory (required: True)',
-        '--cpint':   'Checkpoint interval (required: True)',  
-        '--data':    'Path to the CIFAR-10 data directory (required: True)',
-        '--resume':  'Path to the checkpoint file (required: False)',
-        '--seed':    'Random seed (required: False)',
+        '--lr' :        'Learning rate (required: True)',
+        '--opt':        'Optimizer (required: True)', 
+        '--nepochs':    'Number of epochs (required: True)',
+        '--bs':         'Training batch size (required: True)',
+        '--cpdir':      'Path to the checkpoint directory (required: True)', 
+        '--logdir':     'Path to the log directory (required: True)',
+        '--cpint':      'Checkpoint interval (required: True)',  
+        '--data':       'Path to the CIFAR-10 data directory (required: True)',
+        '--resume':     'Path to the checkpoint file (required: False)',
+        '--seed':       'Random seed (required: False)',
+        '--pretrained': 'Initialise model with weights pretrained ' \
+                         + 'on ImageNet',
     }
     return help_msg[option]
 
@@ -65,6 +67,8 @@ def parse_cmdline_params():
                       help=help('--resume'))
     args.add_argument('--seed', required=False, type=int, default=None,
                       help=help('--seed'))
+    args.add_argument('--pretrained', required=False, type=bool, default=True,
+                      help=help('--pretrained'))
     
     return  args.parse_args()
 

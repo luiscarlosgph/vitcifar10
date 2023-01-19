@@ -41,12 +41,12 @@ def help(option):
         '--logdir':      'Path to the log directory (required: True)',
         '--cpint':       'Checkpoint interval (required: True)',  
         '--data':        'Path to the CIFAR-10 data directory (required: True)',
-        '--data-loader': 'String pointing to a particular active learning \
-                          iterative dataloader (required: False)',
-        '--data-loader-params': 'String containing a Python-style dictionary \
-                                 of parameters (required: False)',
-        '--pretrained':  'Initialise model with pretrained weights \
-                          from ImageNet.',
+        '--data-loader': 'String pointing to a particular active learning ' \
+                          + 'iterative dataloader (required: False)',
+        '--data-loader-params': 'String containing a Python-style ' \
+                                 + 'dictionary of parameters (required: False)',
+        '--pretrained':  'Initialise model with pretrained weights ' \
+                          + 'from ImageNet.',
         #'--resume':  'Boolean to resume all the training cycles (required: False)',
     }
     return help_msg[option]
