@@ -168,6 +168,12 @@ def main():
         print("[INFO] The checkpoint directory " \
             "{} does not exist, I will create it now.".format(args.cpdir))
         os.mkdir(args.cpdir)
+
+    # Create log directory if it does not exist
+    if not os.path.isdir(args.logdir):
+        print("[INFO] The log directory " \
+            "{} does not exist, I will create it now.".format(args.logdir))
+        os.mkdir(args.logdir)
     
     # Besides running several training cycles for reporting purposes,
     # we could run an outer loop with different dataloader configurations
@@ -190,8 +196,12 @@ def main():
             args.cpdir = original_cpdir + '/' + str(dl)
             args.logdir = original_logdir + '/' + str(dl)
             if not os.path.isdir(args.cpdir):
+                print("[INFO] The checkpoint directory " \
+                    "{} does not exist, I will create it now.".format(args.cpdir))
                 os.mkdir(args.cpdir)
             if not os.path.isdir(args.logdir):
+                print("[INFO] The log directory " \
+                    "{} does not exist, I will create it now.".format(args.logdir))
                 os.mkdir(args.logdir)
 
             # Reduce batch size if it is larger than the dataset
