@@ -163,6 +163,12 @@ def main():
     # Parse command line parameters
     args = parse_cmdline_params()
     
+    # Create checkpoint directory if it does not exist
+    if not os.path.isdir(args.cpdir):
+        print("[INFO] The checkpoint directory " \
+            "{} does not exist, I will create it now.".format(args.cpdir))
+        os.mkdir(args.cpdir)
+    
     # Besides running several training cycles for reporting purposes,
     # we could run an outer loop with different dataloader configurations
     if args.data_loader is None:
