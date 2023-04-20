@@ -57,6 +57,7 @@ def main():
             cmd += '--bs ' + str(args.bs)
             
             # Run command and get output  
+            print('Running command:', cmd)
             output = subprocess.check_output(cmd.split(' '))
             
             # Get accuracy
