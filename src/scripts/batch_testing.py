@@ -58,7 +58,7 @@ def main():
             
             # Run command and get output  
             print('Running command:', cmd)
-            output = subprocess.check_output(cmd.split(' '))
+            output = subprocess.check_output(cmd.split(' ')).decode('utf-8')
             
             # Get accuracy
             match = re.search("Percentage of images correctly classified: ([0-9.]+)%", output)
