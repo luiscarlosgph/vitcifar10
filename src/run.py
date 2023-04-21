@@ -6,7 +6,6 @@
 @date   28 Oct 2022.
 """
 import argparse
-import os
 import glob
 import random
 import natsort
